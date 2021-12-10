@@ -21,14 +21,14 @@ async function checkChannel(guildID, channelID){
     }
 }
 
-async function changeChannelState(guildID, channelID, state, dict, wordLimit){
+async function changeChannelState(guildID, channelID, channelName, isActive, dict, wordLimit){
 
     const mongoClient = await mongoConnect();
 
     try {
         const channelQuery = await mongoClient.db(guildID).collection("channels").updateOne(
             {_id: channelID},
-            {$set: { isActive: state, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit } },
+            {$set: { name: channelName, isActive: isActive, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit } },
             {upsert: true})
 
         console.log("check channel " + channelQuery);

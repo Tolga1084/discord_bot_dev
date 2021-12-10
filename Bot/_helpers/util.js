@@ -76,4 +76,9 @@
     return turkceKarakterler[(Math.floor(Math.random() * turkceKarakterler.length))];
 }
 
-module.exports = {randomStartingLetterTR}
+function ms () {
+    const d = new Date();
+    return d.getTime();
+}
+
+module.exports = {randomStartingLetterTR, ms}

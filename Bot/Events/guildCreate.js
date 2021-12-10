@@ -1,4 +1,4 @@
-const registerGuild = require('../Services/guild.services.js').createGuild
+const { guildCreate } = require('../Services/guild.services.js')
 const deployCommands = require('../Commands/Util/deployCommands.js')
 
 module.exports = {
@@ -7,7 +7,7 @@ module.exports = {
 
         console.log("joined "+ guild.name)
 
-        registerGuild(guild)
+        guildCreate(guild)
 
         deployCommands(process.env.clientID, guild.id)
     }

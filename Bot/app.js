@@ -49,7 +49,8 @@ for (const file of eventFiles) {
 }
 
 (async function (){
-
+  const deployCommands = require('./Commands/Util/deployCommands.js')
+  await deployCommands(process.env.clientID, "854557773990854707")
   await client.login(DISCORD_TOKEN)
 
 })()

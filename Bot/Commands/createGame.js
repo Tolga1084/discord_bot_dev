@@ -1,6 +1,7 @@
 const { MessageActionRow, MessageButton } = require('discord.js');
-const { checkChannel } = require("../Services/channel.service");
+const { checkChannel, changeChannelState } = require("../Services/channel.service");
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ms } = require("../_helpers/util.js")
 
 //Turkish menu items to be added later:
 // 'Komutun verildiği kanalda, oyunu başlatır.
@@ -15,48 +16,64 @@ module.exports = {
 			option.setName('dictionary')
 				.setDescription('Selects a dictionary for reference /')
 				.setRequired(true)
-				.addChoice('Turkish', 'TR'))
+				.addChoice('TR', 'TR'))
 		.addIntegerOption(option =>
 			option.setName('min_word_limit')
 				.setDescription('Sets the threshold for word-count before the game can end. (enter \'0\' to disable)')
 				.setRequired(true)),
-	async execute(interaction) {
+	execute: async function (interaction) {
 
 		const channel = await checkChannel(interaction.guildId, interaction.channelId)
 
 		const dict = interaction.options.getString("dictionary")
-		const winLimit = interaction.options.getInteger("min_word_limit")
+		const wordLimit = interaction.options.getInteger("min_word_limit")
 
-
+		const uniqueID = interaction.channelId + interaction.user.id + ms();
+		console.log("uniqueID "+uniqueID);
 		//if there is already an active game session
-		if(channel.isActive){
-			const row = new MessageActionRow()
-				.addComponents(
-					new MessageButton()
-						.setCustomId('startAnyway')
-						.setLabel('START')
-						.setStyle('DANGER'),
-				);
+		if (channel) {
+			if (channel.isActive) {
+				const row = new MessageActionRow()
+					.addComponents(
+						new MessageButton()
+							.setCustomId(uniqueID)
+							.setLabel('START')
+							.setStyle('DANGER'),
+					);
 
-			const filter = interaction => {
-				return (interaction.custom_id === 'startAnyway');
-			};
+				const filter = button => {
+					return (button.customId === uniqueID )&&(button.user.id === interaction.user.id) ;
+				};
 
-			const collector = interaction.createMessageComponentCollector({ filter, componentType: 'BUTTON', time: 60000, max: 1 });
+				const collector = interaction.channel.createMessageComponentCollector({
+					filter,
+					componentType: 'BUTTON',
+					time: 30000,
+					max: 1
+				});
 
-			collector.on('collect', i => {
-				if (i.user.id === interaction.user.id) {
-					i.reply(`${i.user.id} clicked on the ${i.customId} button.`);
-				} else {
-					i.reply({ content: `These buttons aren't for you!`, ephemeral: true });
-				}
-			});
+				collector.on('collect', i => {
+					console.log("collector user id "+ i.user.id);
 
-			await interaction.reply({ content: `***WARNING*** There is already an active session on this channel!
-											 	Starting a new session will terminate it. Press the "START" button, if you wish to proceed.`,
-								  components: [row],
-								  ephemeral: true })
-			
+					changeChannelState(interaction.guildId, interaction.channelId, interaction.channel.name, true, dict, wordLimit)
+					i.reply("the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit)
+
+				});
+
+				collector.on('end', collected => {
+					console.log(`Collected ${collected.size} interactions.`)
+				});
+
+				await interaction.reply({
+					content: `		 ***WARNING***		` +"\nThere is already an active session on this channel!\n" +
+						"Starting a new session will terminate it. Press the START button, if you wish to proceed.",
+					components: [row]
+				})
+			}
+		}
+		else {
+			await changeChannelState(interaction.guildId, interaction.channelId, interaction.channel.name, true, dict, wordLimit)
+			await interaction.reply("the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit)
 		}
 	},
 };

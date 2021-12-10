@@ -2,6 +2,10 @@ const { MessageActionRow, MessageButton } = require('discord.js');
 const { checkChannel, changeChannelState } = require("../Services/channel.service");
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ms } = require("../_helpers/util.js")
+const talkedRecently = new Set();
+
+// CONFIG
+const cooldown = 20000;
 
 //Turkish menu items to be added later:
 // 'Komutun verildiği kanalda, oyunu başlatır.
@@ -23,6 +27,16 @@ module.exports = {
 				.setRequired(true)),
 	execute: async function (interaction) {
 
+		// Command cooldown
+		if (talkedRecently.has(interaction.user.id)) {
+			interaction.reply("You have already used this command recently!" );
+			return
+		}
+		talkedRecently.add(interaction.user.id);
+		setTimeout(() => {
+			talkedRecently.delete(interaction.user.id);
+		}, cooldown);
+
 		const channel = await checkChannel(interaction.guildId, interaction.channelId)
 
 		const dict = interaction.options.getString("dictionary")
@@ -30,6 +44,7 @@ module.exports = {
 
 		const uniqueID = interaction.channelId + interaction.user.id + ms();
 		console.log("uniqueID "+uniqueID);
+
 		//if there is already an active game session
 		if (channel) {
 			if (channel.isActive) {
@@ -48,20 +63,20 @@ module.exports = {
 				const collector = interaction.channel.createMessageComponentCollector({
 					filter,
 					componentType: 'BUTTON',
-					time: 30000,
+					time: cooldown,
 					max: 1
 				});
 
+				let isClicked = false;
+
 				collector.on('collect', i => {
 					console.log("collector user id "+ i.user.id);
-
+					isClicked = true;
+					row.components[0].setDisabled(true);
 					changeChannelState(interaction.guildId, interaction.channelId, interaction.channel.name, true, dict, wordLimit)
-					i.reply("the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit)
+					i.update({ content: "the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit, components: [row] });
+					//interaction.channel.send("the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit)
 
-				});
-
-				collector.on('end', collected => {
-					console.log(`Collected ${collected.size} interactions.`)
 				});
 
 				await interaction.reply({
@@ -69,6 +84,11 @@ module.exports = {
 						"Starting a new session will terminate it. Press the START button, if you wish to proceed.",
 					components: [row]
 				})
+
+				setTimeout( () => {
+					row.components[0].setDisabled(true);
+					if (!isClicked) interaction.editReply({content: "This interaction has timed out!", components: [row]});
+				}, cooldown)
 			}
 		}
 		else {

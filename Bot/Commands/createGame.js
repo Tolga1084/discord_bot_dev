@@ -38,12 +38,9 @@ module.exports = {
 		}, cooldown);
 
 		const channel = await checkChannel(interaction.guildId, interaction.channelId)
-
 		const dict = interaction.options.getString("dictionary")
 		const wordLimit = interaction.options.getInteger("min_word_limit")
-
 		const uniqueID = interaction.channelId + interaction.user.id + ms();
-		console.log("uniqueID "+uniqueID);
 
 		//if there is already an active game session
 		if (channel) {

@@ -1,18 +1,16 @@
-const mongoConnect = require("../_helpers/getMongoClient.js");
 const { MongoServerError } = require('mongodb');
-const { MongoClient } = require('mongodb');
 
 async function guildCreate(guild) {
 
-    const mongoClient = await mongoConnect();
+    const mongoClient = await require("../app.js")
 
     try {
         const result = await mongoClient.db("discord_bot_db").collection("guilds").updateOne(
             {_id: guild.id},
-            {$set: {name: guild.name}},
+            {$set: {name: guild.name, hasBot: true}},
             {upsert: true})
 
-        if(result.matchedCount == 1)
+        if(result.matchedCount === 1)
         {
             console.log(guild.name + ' was already registered', result)
         }
@@ -23,6 +21,7 @@ async function guildCreate(guild) {
             let guildDocument = {
                 _id: guild.id,
                 name: guild.name,
+                hasBot: true
             }
 
             let res = await mongoClient.db(guild.id).collection("GUILD_INFO").insertOne(guildDocument)
@@ -31,26 +30,28 @@ async function guildCreate(guild) {
 
     } catch (error) {
         if (error instanceof MongoServerError) {
-            console.log(`Error worth logging: ${error}`); // special case for some reason
+            console.log(`ERROR createGuild : ${error}`); // special case for some reason
         }
     }
 }
 async function removeGuild(guild){
 
-    const mongoClient = await mongoConnect();
-
-    let guildDocument = {
-        _id: guild.id,
-        guildName: guild.name,
-    }
+    const mongoClient = await require("../app.js")
 
     try {
-        mongoClient.db("discord_bot_db").collection("guilds").deleteOne(
-            {_id: guildDocument._id}
+        mongoClient.db("discord_bot_db").collection("guilds").updateOne(
+            {_id: guild.id},
+            {$set: {hasBot: false}}
         )
-    }catch (error) {
-        console.error(error);
+    } catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR removeGuild: ${error}`); // special case for some reason
+        }
     }
+}
+
+async function getGuilds(){
+
 }
 
 module.exports = { guildCreate, removeGuild}

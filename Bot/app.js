@@ -1,6 +1,7 @@
 // ================= WORD CHAIN GAME BOT ===================
 
 /* FEATURES TO IMPLEMENT
+  - add TR option for interface language
   - explosion effect for removing messages
   - process guild registers and removes
   - styled messages for informing users. -- score tables, starting letter etc... --

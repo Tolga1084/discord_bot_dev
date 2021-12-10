@@ -2,10 +2,11 @@ const { MessageActionRow, MessageButton } = require('discord.js');
 const { checkChannel, changeChannelState } = require("../Services/channel.service");
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ms } = require("../_helpers/util.js")
+const { cooldown } = require("./Util/commandUtil.js")
 const talkedRecently = new Set();
 
 // CONFIG
-const cooldown = 20000;
+const cooldownTimer = 20000;
 
 //Turkish menu items to be added later:
 // 'Komutun verildiği kanalda, oyunu başlatır.
@@ -23,19 +24,12 @@ module.exports = {
 				.addChoice('TR', 'TR'))
 		.addIntegerOption(option =>
 			option.setName('min_word_limit')
-				.setDescription('Sets the threshold for word-count before the game can end. (enter \'0\' to disable)')
+				.setDescription('Sets the threshold for the valid answer count before the game can end. (enter \'0\' to disable)')
 				.setRequired(true)),
 	execute: async function (interaction) {
 
 		// Command cooldown
-		if (talkedRecently.has(interaction.user.id)) {
-			interaction.reply("You have already used this command recently!" );
-			return
-		}
-		talkedRecently.add(interaction.user.id);
-		setTimeout(() => {
-			talkedRecently.delete(interaction.user.id);
-		}, cooldown);
+		cooldown(interaction,talkedRecently);
 
 		const channel = await checkChannel(interaction.guildId, interaction.channelId)
 		const dict = interaction.options.getString("dictionary")
@@ -60,7 +54,7 @@ module.exports = {
 				const collector = interaction.channel.createMessageComponentCollector({
 					filter,
 					componentType: 'BUTTON',
-					time: cooldown,
+					time: cooldownTimer,
 					max: 1
 				});
 
@@ -73,7 +67,6 @@ module.exports = {
 					changeChannelState(interaction.guildId, interaction.channelId, interaction.channel.name, true, dict, wordLimit)
 					i.update({ content: "the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit, components: [row] });
 					//interaction.channel.send("the game has started: " + "Dictionary: "+ dict + "; Min word limit: "+ wordLimit)
-
 				});
 
 				await interaction.reply({
@@ -85,7 +78,7 @@ module.exports = {
 				setTimeout( () => {
 					row.components[0].setDisabled(true);
 					if (!isClicked) interaction.editReply({content: "This interaction has timed out!", components: [row]});
-				}, cooldown)
+				}, cooldownTimer)
 			}
 		}
 		else {

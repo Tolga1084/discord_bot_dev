@@ -1,37 +1,87 @@
 const { MongoServerError } = require('mongodb');
 
-async function checkChannel(guildID, channelID){
+async function getChannel(guildID, channelID){
 
-    const mongoClient = await require("../app.js")
-    console.log(mongoClient)
+    const mongoClient = await require("../app.js");
 
     let query = {_id: channelID}
 
     try {
         const channelQuery = await mongoClient.db(guildID).collection("channels").findOne(query)
-        console.log("check channel " + channelQuery);
+        console.log("getChannel " + JSON.stringify(channelQuery));
 
         return channelQuery;
 
     }catch (error) {
         if (error instanceof MongoServerError) {
-            console.log(`ERROR checkChannel: ${error}`); // special case for some reason
+            console.log(`ERROR getChannel: ${error}`); // special case for some reason
         }
-        throw error; // still want to crash
     }
 }
 
-async function changeChannelState(guildID, channelID, channelName, isActive, dict, wordLimit){
+async function getActiveChannels(guildID){
+
+    const mongoClient = await require("../app.js");
+
+    try {
+        const channelQuery = await mongoClient.db(guildID).collection("channels").find(
+            {isActive: true},
+            {options: { sort: { name: 1 }, projection: { isActive: 1, name:1, dict: 1, wordLimit: 1 }}})
+
+        console.log("getActiveChannels: " + JSON.stringify(await channelQuery));
+
+        return await channelQuery;
+
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR getActiveChannels: ${error}`); // special case for some reason
+        }
+    }
+}
+
+async function registerActiveChannel(guildID, channelID, channelName, isActive, dict, wordLimit){
 
     const mongoClient = await require("../app.js")
+
+    let channel = {_id: channelID, name: channelName, isActive: isActive, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit}
+
+    try {
+        const channelQuery = await mongoClient.db(guildID).collection("channels").insertOne(channel)
+
+        console.log("registerActiveChannel " + JSON.stringify(channelQuery));
+
+        return channelQuery;
+
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR registerActiveChannel: ${error}`); // special case for some reason
+        }
+    }
+}
+
+async function changeChannelState(guildID, channelID, isActive, dict, wordLimit){
+
+    const mongoClient = await require("../app.js")
+
+
+    const update = {}
+    if (isActive !== undefined) {
+        update['isActive'] = isActive
+    }
+    if (dict !== undefined) update['dict'] = dict;
+    if (wordLimit !== undefined) {
+        update['wordLimit'] = wordLimit;
+        update['remainingWordLimit'] = wordLimit;
+    }
+
+    console.log("changeChannelState update " + JSON.stringify(update));
 
     try {
         const channelQuery = await mongoClient.db(guildID).collection("channels").updateOne(
             {_id: channelID},
-            {$set: { name: channelName, isActive: isActive, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit } },
-            {upsert: true})
+            {$set: update })
 
-        console.log("check channel " + channelQuery);
+        console.log("changeChannelState " + JSON.stringify(channelQuery));
 
         return channelQuery;
 
@@ -39,8 +89,27 @@ async function changeChannelState(guildID, channelID, channelName, isActive, dic
         if (error instanceof MongoServerError) {
             console.log(`ERROR changeChannelState: ${error}`); // special case for some reason
         }
-        throw error; // still want to crash
     }
 }
 
-module.exports = {checkChannel,changeChannelState}
+async function stopOnAllChannels(guildID, channelID){
+
+    const mongoClient = await require("../app.js")
+
+    try {
+        const channelQuery = await mongoClient.db(guildID).collection("channels").updateMany(
+            {},
+            {$set: { isActive: false } })
+
+        console.log("stopOnAllChannels " + JSON.stringify(channelQuery));
+
+        return channelQuery;
+
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR stopOnAllChannels: ${error}`); // special case for some reason
+        }
+    }
+}
+
+module.exports = { registerActiveChannel, getChannel, getActiveChannels, changeChannelState }

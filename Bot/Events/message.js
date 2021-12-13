@@ -1,4 +1,5 @@
-const wordGame = require("../Game/wordGame.service.js")
+const { wordGame } = require("../Game/wordGame.service.js")
+const { getChannel } = require("../Services/channel.service");
 
 module.exports ={
     name: "messageCreate",
@@ -12,13 +13,12 @@ module.exports ={
         if (message.content.startsWith('.')) return
 
         // check if the channel has an active game session
-        let channelQuery = await checkChannel(message);
+        let channelQuery = await getChannel(message);
         if (!(channelQuery.isActive === true)) {
             console.log("message controller, channelquery.isActive: "+(channelQuery.isActive === true));
             console.log("message controller, rejected message channelID: "+message.channelId)
             return;
         }
-
             wordGame(message);
     }
 }

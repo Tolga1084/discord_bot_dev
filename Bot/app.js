@@ -57,5 +57,10 @@ for (const file of eventFiles) {
   }
 }
 
+// error tracking
+process.on('unhandledRejection', error => {
+  console.error('Unhandled promise rejection:', error);
+});
+
 client.login(DISCORD_TOKEN)
 

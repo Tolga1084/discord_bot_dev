@@ -25,15 +25,11 @@ const {Client, Collection, Intents} = require('discord.js') ;
 const fs = require('fs')
 const getCommands = require('./Commands/Util/getCommands.js').getCommands;
 const DISCORD_TOKEN = process.env['DISCORD_TOKEN_TEST'];
-const getMongoClient = require("./_helpers/getMongoClient.js")
 const deployCommands = require('./Commands/Util/deployCommands.js')
-
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
 
 console.time("uptime");
-
-module.exports = getMongoClient();
 
 // get commands
 const commands = getCommands();

@@ -2,10 +2,11 @@ const { MongoServerError,} = require('mongodb');
 const db = process.env['AppDatabase']
 const deployCommands = require("../Commands/Util/deployCommands.js")
 const clientID = process.env['clientID']
+const getMongoClient = require("../_helpers/getMongoClient.js")
 
 async function guildCreate(guild) {
 
-    const mongoClient = await require("../app.js")
+    const mongoClient = await getMongoClient()
 
     try {
         const result = await mongoClient.db(db).collection("guilds").updateOne(
@@ -31,12 +32,12 @@ async function guildCreate(guild) {
 // TODO add removedDate for TTL index
 async function removeGuild(guild){
 
-    const mongoClient = await require("../app.js")
+    const mongoClient = await getMongoClient()
 
     try {
         mongoClient.db(db).collection("guilds").updateOne(
             {_id: guild.id},
-            {$set: {hasBot: false}}
+            {$set: {hasBot: false, removeDate: new Date()}}
         )
     } catch (error) {
         if (error instanceof MongoServerError) {
@@ -48,7 +49,7 @@ async function removeGuild(guild){
 
 async function syncGuilds(client){
 
-    const mongoClient = await require("../app.js")
+    const mongoClient = await getMongoClient()
 
     try {
         await mongoClient.db(db).collection("guilds").updateMany(

@@ -1,9 +1,10 @@
 const { MongoServerError } = require('mongodb');
 const db = process.env['AppDatabase']
+const getMongoClient = require("../_helpers/getMongoClient.js")
 
 async function getChannel(channelID){
 
-    const mongoClient = await require("../app.js");
+    const mongoClient = await getMongoClient();
 
     let query = {_id: channelID}
 
@@ -23,7 +24,7 @@ async function getChannel(channelID){
 
 async function getActiveChannels(guildID){
 
-    const mongoClient = await require("../app.js");
+    const mongoClient = await getMongoClient();
 
     try {
         const channelQuery = await mongoClient.db(db).collection("channels").find(
@@ -44,7 +45,7 @@ async function getActiveChannels(guildID){
 
 async function registerActiveChannel(guildID, channelID, channelName, isActive, dict, wordLimit){
 
-    const mongoClient = await require("../app.js")
+    const mongoClient = await getMongoClient();
 
     let channel = {_id: channelID, name: channelName, isActive: isActive, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit}
 
@@ -65,7 +66,7 @@ async function registerActiveChannel(guildID, channelID, channelName, isActive, 
 
 async function changeChannelState(channelID, isActive, dict, wordLimit, name){
 
-    const mongoClient = await require("../app.js")
+    const mongoClient = await getMongoClient();
 
     const update = {}
     if (isActive !== undefined) {

@@ -1,4 +1,5 @@
-const getEmojis = require("../_helpers/getEmojis.js")
+const {syncGuilds} = require("../Services/guild.services");
+const emojiGuildID = process.env['emoji_guild']
 
 module.exports = {
     name: 'ready',
@@ -8,12 +9,15 @@ module.exports = {
         console.log("The Client is ready!");
 
         // process guild registers and removes
+        try {
+            await client.guilds.fetch();
+            await syncGuilds(client);
 
+        }catch (err){
+            console.log("ready.js sync "+ err);
+        }
 
-        // get emojis
-        const emojiGuildID = process.env['emoji_guild']
-        const emojiGuild = client.guilds.cache.get(emojiGuildID);
-        const emojis = await getEmojis(emojiGuild)
-
+        const emojiGuild = client.guilds.cache.get(emojiGuildID)
+        await emojiGuild.emojis.fetch();
     }
 };

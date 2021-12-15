@@ -1,23 +1,35 @@
 const { getConfirmationButton } = require("./Buttons/ConfirmationButton");
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { getChannel, getActiveChannels, changeChannelState } = require("../Services/channel.service");
-const { cooldown } = require("./Util/commandUtil.js")
-const talkedRecently = new Set();
 
-// CONFIG
-const cooldownTimer = 30000;
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Stops the game on the channel this command is called.')
+        .setDescription('Terminates the game')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('here')
+                .setDescription('Terminates the game on this channel'))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('all')
-                .setDescription('Stops the games on every channel')),
-    async execute(interaction) {
-        // TODO channel specific cooldown?
-        //if(cooldown(interaction,talkedRecently, cooldownTimer)) return;
+                .setDescription('Terminates the games on every channel')),
+    async execute(interaction, buttonDuration) {
+
+        if (interaction.options.getSubcommand() === 'here'){
+
+            const channel = await getChannel(interaction.channelId);
+
+            if(channel){
+                if(channel.isActive){
+                    await changeChannelState(interaction.channelId, false)
+                    interaction.reply("The game has been terminated!")
+                    return;
+                }
+            }
+            interaction.reply("There is currently no active session on this channel!")
+        }
 
         if (interaction.options.getSubcommand() === 'all'){
 
@@ -25,10 +37,12 @@ module.exports = {
             console.log("stopGame getActiveChannels: " + JSON.stringify(await channels))
 
             await channels.count(async function(err, count) {
-
+                if(err) {
+                    console.log("ERROR stopGame all:" + err + "\nERROR stopGame all interaction: " + interaction);
+                }
                 console.log("stopGame channels.count: " + count)
                 if(count >= 1){
-                    let message = "Would you like to stop the games in these channels?\n\n"
+                    let message = "Would you like to terminate the games in these channels?\n\n"
 
                     const activeChannels = [];
 
@@ -46,36 +60,18 @@ module.exports = {
                     const collectorFunction = function () {
                         // TODO implement bulkwrite method?
                         activeChannels.forEach(channelID => {
-                            changeChannelState(interaction.guildId, channelID, false);
+                            changeChannelState(channelID, false);
                         })
                     }
-
-                    const update = "Games are stopped";
-                    const row = await getConfirmationButton(interaction, 'STOP', 'DANGER', cooldownTimer, collectorFunction, update);
+                    // TODO inform the channels in which the games had been playing out, that the games have been stopped
+                    const update = "The games have been stopped!";
+                    const row = await getConfirmationButton(interaction, 'STOP', 'DANGER', buttonDuration, collectorFunction, update);
                     console.log("stopGame forEach message: " + message);
                     await interaction.reply({content: message, components: [row]});
 
-                    if(count === 0) await interaction.reply("There are no active sessions on any channel!");
-
                 }
-                if(err) {
-                    console.log("ERROR stopGame all:" + err + "\nERROR stopGame all interaction: " + interaction);
-                }
-
+                if(count === 0) await interaction.reply("There are no active sessions on any channel!");
             });
         }
-
-        /*
-        const channel = await getChannel(interaction.guildId, interaction.channelId);
-
-        if(channel){
-            if(!channel.isActive){
-                interaction.reply("There is currently no active session on this channel!")
-                return;
-            }
-        }
-
-        await changeChannelState(interaction.guildId, interaction.channelId, false);*/
-
     }
 }

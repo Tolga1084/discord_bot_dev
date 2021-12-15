@@ -1,7 +1,8 @@
 const { ms } = require("../../_helpers/util.js")
 const { MessageActionRow, MessageButton } = require('discord.js')
+const deleteTimer = 10000;
 
-async function getConfirmationButton(interaction, label, style, cooldownTimer, collectorFunction, update){
+async function getConfirmationButton(interaction, label, style, duration, collectorFunction, update){
 
     const uniqueID = interaction.channelId + interaction.user.id + ms();
 
@@ -14,13 +15,15 @@ async function getConfirmationButton(interaction, label, style, cooldownTimer, c
         );
 
     const filter = button => {
-        return (button.customId === uniqueID )&&(button.user.id === interaction.user.id) ;
+        const isValidUser = (button.customId === uniqueID )&&(button.user.id === interaction.user.id);
+        if (!isValidUser) button.reply({content: "That button is not for you!", ephemeral:true});
+        return isValidUser ;
     };
 
     const collector = interaction.channel.createMessageComponentCollector({
         filter,
         componentType: 'BUTTON',
-        time: cooldownTimer,
+        time: duration,
         max: 1
     });
 
@@ -36,8 +39,17 @@ async function getConfirmationButton(interaction, label, style, cooldownTimer, c
 
     setTimeout( () => {
         row.components[0].setDisabled(true);
-        if (!isClicked) interaction.editReply({content: "This interaction has timed out!", components: [row]});
-    }, cooldownTimer)
+        collector.stop();
+        if (!isClicked) {
+            interaction.editReply({content: "This interaction has timed out!", components: [row]})
+            setTimeout(() => {
+                try {
+                    interaction.deleteReply()
+                }
+                catch (err){console.log("confirmationButton setTimeout deleteTimer failed: " + err)}
+            }, deleteTimer)
+        }
+    }, duration)
 
     return row;
 }

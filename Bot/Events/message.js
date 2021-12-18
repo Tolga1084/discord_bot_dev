@@ -20,7 +20,10 @@ module.exports ={
             console.log("message controller, rejected message channelID: "+message.channelId)
             return;
         }
-            // TODO threaded process for each guild
+            // TODO threaded process for each game
+        let t0 = await performance.now();
             await wordGame(message);
+        let t1 = await performance.now();
+        console.log("messageCreate wordGame perf: " + t1-t0);
     }
 }

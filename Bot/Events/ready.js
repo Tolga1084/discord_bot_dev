@@ -11,12 +11,13 @@ module.exports = {
         // process guild registers and removes
         try {
             await client.guilds.fetch();
-            await syncGuilds(client);
+            //await syncGuilds(client);
 
         }catch (err){
             console.log("ready.js sync "+ err);
         }
 
+        // make emojis available in the cache
         const emojiGuild = client.guilds.cache.get(emojiGuildID)
         await emojiGuild.emojis.fetch();
     }

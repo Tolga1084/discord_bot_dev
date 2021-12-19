@@ -1,3 +1,4 @@
+const {randomStartingLetterTR} = require("../_helpers/util");
 const { getConfirmationButton } = require("./Buttons/ConfirmationButton");
 const { getChannel, changeChannelState, registerActiveChannel } = require("../Services/channel.service");
 const { SlashCommandBuilder } = require('@discordjs/builders');
@@ -25,13 +26,14 @@ module.exports = {
 		const channel = await getChannel(interaction.channelId)
 		const dict = interaction.options.getString("dictionary")
 		const wordLimit = interaction.options.getInteger("min_word_limit")
-		const update = "the game has started: " + "Dictionary: " + dict + ", Min word limit: " + wordLimit;
+		const startingLetter = await randomStartingLetterTR();
+		const update = "the game has started!  StartingLetter: " + startingLetter + " Dictionary: " + dict + ", Min word limit: " + wordLimit;
 
 		//if there is already an active game session
 		if (channel) {
 			if (channel.isActive) {
 				const collectorFunction = function () {
-					return changeChannelState(interaction.channelId, true, dict, wordLimit)
+					return changeChannelState(interaction.channelId, undefined, true, dict, wordLimit, startingLetter)
 				}
 				const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, collectorFunction, update)
 
@@ -41,11 +43,11 @@ module.exports = {
 					components: [row]
 				})
 			}else {
-				await changeChannelState(interaction.channelId, true, dict, wordLimit);
+				await changeChannelState(interaction.channelId, undefined, true, dict, wordLimit,  startingLetter);
 				await interaction.reply(update);
 			}
 		}else {
-			await registerActiveChannel(interaction.guildId, interaction.channelId, interaction.channel.name, true, dict, wordLimit);
+			await registerActiveChannel(interaction.channelId, interaction.guildId, undefined, true, dict, wordLimit, startingLetter, null);
 			await interaction.reply(update);
 		}
 	}

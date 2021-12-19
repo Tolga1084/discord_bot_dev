@@ -5,20 +5,25 @@ const getMongoClient = require("../_helpers/getMongoClient.js")
 // check if the word exists in the dictionary.
 // first looks for exact matches; if not, then looks for base matches where (â == a)
 
-export async function dictQuery (collection, word) {
+async function dictQuery (word) {
 
     const mongoClient = await getMongoClient();
 
     try {
         let res = await mongoClient.db(db).collection("TR_dictionary2").findOne({madde: word}, {
             collation: {
-                locale: 'tr@collation=search',
+                locale: 'tr',
                 strength: 2
             }
         });
 
         if (res === null) {
-            res = await collection.findOne({madde: word}, {collation: {locale: 'tr@collation=search', strength: 1}})
+            res = await mongoClient.db(db).collection("TR_dictionary2").findOne({madde: word}, {
+                collation: {
+                    locale: 'tr',
+                    strength: 1
+                }
+            })
         }
         return res;
 
@@ -30,7 +35,7 @@ export async function dictQuery (collection, word) {
     }
 }
 
-module.exports = {dictQuery};
+module.exports = dictQuery
 
 /* INDEXES
 {

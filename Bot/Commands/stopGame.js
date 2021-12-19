@@ -23,7 +23,7 @@ module.exports = {
 
             if(channel){
                 if(channel.isActive){
-                    await changeChannelState(interaction.channelId, false)
+                    await changeChannelState(interaction.channelId, undefined, false)
                     interaction.reply("The game has been terminated!")
                     return;
                 }
@@ -63,7 +63,7 @@ module.exports = {
                             changeChannelState(channelID, false);
                         })
                     }
-                    // TODO inform the channels in which the games had been playing out, that the games have been stopped
+                    // TODO inform the channels in which the games had been playing out, that the games have been terminated
                     const update = "The games have been stopped!";
                     const row = await getConfirmationButton(interaction, 'STOP', 'DANGER', buttonDuration, collectorFunction, update);
                     console.log("stopGame forEach message: " + message);

@@ -1,17 +1,16 @@
-const { wordGame } = require("../Services/wordGame.service.js")
+const { wordGame } = require("../Games/wordGame.js")
 const { getChannel } = require("../Services/channel.service.js");
 
 module.exports ={
     name: "messageCreate",
     async execute(message){
 
-        console.log("messageCreate event => " + message)
-
         if (message.author.bot) return;
         if (message.isInteraction) return
-
-        // ignore messages that prefixed with a dot
         if (message.content.startsWith('.')) return
+
+        console.log("\n\n -------------------------------------------------" +
+            "\n MESSAGE => " + message.content + "\n")
 
         // check if the channel has an active game session
         let channelQuery = await getChannel(message.channelId);
@@ -21,9 +20,9 @@ module.exports ={
             return;
         }
             // TODO threaded process for each game
-        let t0 = await performance.now();
+            let t0 = performance.now();
             await wordGame(message);
-        let t1 = await performance.now();
-        console.log("messageCreate wordGame perf: " + t1-t0);
+            let t1 = performance.now();
+            console.log("messageCreate wordGame perf: " + (t1-t0));
     }
 }

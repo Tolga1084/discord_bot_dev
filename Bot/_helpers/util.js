@@ -14,12 +14,6 @@
     return str.startsWith(startingLetter.toLocaleLowerCase("tr-TR"));
 }
 
- function remindStartingLetter(startingLetter, channel, emoji) {
-    channel.send({
-        content: 'başlangıç harfi ' + `**${startingLetter.toLocaleUpperCase("tr-TR")}**  ${emoji}`
-    })
-}
-
  function isNumeric(val) {
     return /^-?\d+$/.test(val);
 }
@@ -81,4 +75,4 @@ function ms () {
     return d.getTime();
 }
 
-module.exports = {randomStartingLetterTR, ms}
+module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms}

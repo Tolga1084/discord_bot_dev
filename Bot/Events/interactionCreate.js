@@ -1,4 +1,4 @@
-const { cooldown } = require("../Commands/Util/commandUtil.js")
+const { cooldown } = require("../Commands/Util/cooldown.js")
 const talkedRecently = new Set();
 
 //CONFIG
@@ -15,6 +15,7 @@ module.exports ={
         if (!command) return;
 
         if (cooldown (interaction, interaction.commandName, talkedRecently, cooldownTimer)) return;
+        console.log("after cooldown")
 
         try {
             await command.execute(interaction, buttonDuration);

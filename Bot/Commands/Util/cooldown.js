@@ -6,13 +6,13 @@ function cooldown (interaction, commandName, set, cooldown) {
 
     if (set.has(id)) {
         interaction.reply("You have already used this command recently on this channel! (cooldown period: " + cooldown/1000 + " seconds)");
-        setTimeout(() => interaction.deleteReply() , 10000 )
+        setTimeout(() => interaction.deleteReply() , 5000 )
+        console.log("cooldown true")
         return true
     } else {
         set.add(id);
-        setTimeout(() => {
-            set.delete(interaction.user.id);
-        }, cooldown);
+        setTimeout(() => {set.delete(id)}, cooldown);
+        console.log("cooldown false")
         return false
     }
 }

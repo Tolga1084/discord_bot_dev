@@ -44,8 +44,9 @@ async function wordGame (message){
         return;
     }else console.log("\nwordQuery madde" + wordQuery.madde + " \nwordQuery ID " + wordQuery._id)
 
+
+
     console.log("\nreached end")
-    return
 }
 
 async function isWordValid (word, emojis) {

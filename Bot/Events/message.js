@@ -15,8 +15,8 @@ module.exports ={
         // check if the channel has an active game session
         let channelQuery = await getChannel(message.channelId);
         if (!(channelQuery.isActive === true)) {
-            console.log("message controller, channelquery.isActive: "+(channelQuery.isActive === true));
-            console.log("message controller, rejected message channelID: "+message.channelId)
+            console.log("message event, channelQuery.isActive: "+(channelQuery.isActive === true));
+            console.log("message event, rejected message channelID: "+message.channelId)
             return;
         }
             // TODO threaded process for each game

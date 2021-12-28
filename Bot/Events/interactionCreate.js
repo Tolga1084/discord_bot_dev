@@ -14,6 +14,9 @@ module.exports ={
         const command = interaction.client.commands.get(interaction.commandName);
         if (!command) return;
 
+        console.log("\n\n -------------------------------------------------" +
+            "\n INTERACTION => " + interaction.commandName + "\n")
+
         if (cooldown (interaction, interaction.commandName, talkedRecently, cooldownTimer)) return;
         console.log("after cooldown")
 

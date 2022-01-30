@@ -1,3 +1,4 @@
+const {getGuild} = require("../Services/guild.service");
 const { cooldown } = require("../Commands/Util/cooldown.js")
 const talkedRecently = new Set();
 
@@ -17,7 +18,9 @@ module.exports ={
         console.log("\n\n -------------------------------------------------" +
             "\n INTERACTION => " + interaction.commandName + "\n")
 
-        if (cooldown (interaction, interaction.commandName, talkedRecently, cooldownTimer)) return;
+        const guildQuery = await getGuild(interaction.guildId);
+
+        if (cooldown (interaction, interaction.commandName, talkedRecently, cooldownTimer, guildQuery.interfaceLanguage)) return;
         console.log("after cooldown")
 
         try {

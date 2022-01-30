@@ -2,6 +2,7 @@ const { MongoServerError } = require('mongodb');
 const db = process.env['AppDatabase']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 
+//TODO name change events; guild and channel --- channel name sync?
 async function getChannel(channelID, word){
 
     const mongoClient = await getMongoClient();
@@ -13,9 +14,7 @@ async function getChannel(channelID, word){
     if (word !== undefined) query['usedWords'] = word;
 
     try {
-        const channelQuery = await mongoClient.db(db).collection("channels").findOne(query, options)
-
-        return channelQuery;
+        return await mongoClient.db(db).collection("channels").findOne(query, options);
 
     }catch (error) {
         if (error instanceof MongoServerError) {

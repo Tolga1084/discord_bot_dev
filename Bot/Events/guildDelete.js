@@ -1,4 +1,4 @@
-const { removeGuild } = require('../Services/guild.services.js')
+const { removeGuild } = require('../Services/guild.service.js')
 
 module.exports = {
     name: "guildDelete",

@@ -6,7 +6,7 @@ const {isOneLine, isLetter, isOneWord, checkStartingLetter} = require("../_helpe
 
 async function wordGame (message){
 
-    const emojis = await getEmojis(message.guild);
+    const emojis = await getEmojis(message.client);
     const word = message.content.toString().toLocaleLowerCase("tr-TR");
 
     if(!await isWordValid(word, emojis)) return;
@@ -43,8 +43,6 @@ async function wordGame (message){
         await remindStartingLetter(channel.startingLetter, channel.channel, emojis);
         return;
     }else console.log("\nwordQuery madde" + wordQuery.madde + " \nwordQuery ID " + wordQuery._id)
-
-
 
     console.log("\nreached end")
 }

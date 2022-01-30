@@ -1,6 +1,7 @@
 const { wordGame } = require("../Games/wordGame.js")
 const { getChannel } = require("../Services/channel.service.js");
 
+//TODO collect user suggestions and bug reports through DM ?
 module.exports ={
     name: "messageCreate",
     async execute(message){
@@ -13,10 +14,15 @@ module.exports ={
             "\n MESSAGE => " + message.content + "\n")
 
         // check if the channel has an active game session
-        let channelQuery = await getChannel(message.channelId);
+        const channelQuery = await getChannel(message.channelId);
+        if (channelQuery === null) {
+            console.log("channel is not registered"+
+                        "\nmessage event, rejected message channel: "+message.channel.name+": "+message.channelId)
+            return;
+        }
         if (!(channelQuery.isActive === true)) {
-            console.log("message event, channelQuery.isActive: "+(channelQuery.isActive === true));
-            console.log("message event, rejected message channelID: "+message.channelId)
+            console.log("message event, channelQuery.isActive: "+(channelQuery.isActive)+
+                        "\nmessage event, rejected message channel: "+message.channel.name+": "+message.channelId)
             return;
         }
             // TODO threaded process for each game

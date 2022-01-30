@@ -14,8 +14,9 @@ function getCommands() {
     return commands;
 }
 
-function getCommandsJsonData() {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+function getCommandsJsonData(language) {
+
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith("_"+language+".js"));
     const commandsJsonData = [];
 
     for (const file of commandFiles) {

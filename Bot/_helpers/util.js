@@ -75,4 +75,11 @@ function ms () {
     return d.getTime();
 }
 
-module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms}
+// returns (Arr1 - Arr2)
+function arrDiff (Arr1, Arr2)
+{
+    const set2 = new Set(Arr2);
+    return Arr1.filter(x => !set2.has(x));
+}
+
+module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff}

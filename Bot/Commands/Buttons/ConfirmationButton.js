@@ -2,10 +2,23 @@ const { ms } = require("../../_helpers/util.js")
 const { MessageActionRow, MessageButton } = require('discord.js')
 const deleteTimer = 10000;
 
-async function getConfirmationButton(interaction, label, style, duration, collectorFunction, update){
+async function getConfirmationButton(interaction, label, style, duration, collectorFunction, update, emoji, language){
 
     const uniqueID = interaction.channelId + interaction.user.id + ms();
 
+    const languages = {
+        TR: {
+            warning1: "Çek elini, başkasının butonu o!",
+            warning2: "Bu etkileşim, zaman aşımına uğradı!",
+        },
+
+        EN: {
+            warning1: "That button is not for you!",
+            warning2: "This interaction has timed out!"
+        }
+    }
+
+    const L = languages[language.toUpperCase()];
     const row = new MessageActionRow()
         .addComponents(
             new MessageButton()
@@ -16,7 +29,7 @@ async function getConfirmationButton(interaction, label, style, duration, collec
 
     const filter = button => {
         const isValidUser = (button.customId === uniqueID )&&(button.user.id === interaction.user.id);
-        if (!isValidUser) button.reply({content: "That button is not for you!", ephemeral:true});
+        if (!isValidUser) button.reply({content: L.warning1, ephemeral:true});
         return isValidUser ;
     };
 
@@ -34,14 +47,16 @@ async function getConfirmationButton(interaction, label, style, duration, collec
         isClicked = true;
         row.components[0].setDisabled(true);
         collectorFunction();
-        interaction.editReply({content: update, components: [row]});
+        interaction.editReply({content: update, components: [row]}).then(x => {
+            if(emoji !== undefined) interaction.channel.send(`${emoji}`)
+        })
     });
 
     setTimeout( () => {
         row.components[0].setDisabled(true);
         collector.stop();
         if (!isClicked) {
-            interaction.editReply({content: "This interaction has timed out!", components: [row]})
+            interaction.editReply({content: L.warning2, components: [row]})
             setTimeout(() => {
                 try {
                     interaction.deleteReply()

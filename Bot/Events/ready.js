@@ -1,4 +1,4 @@
-const {syncGuilds} = require("../Services/guild.services");
+const {syncGuilds} = require("../Services/guild.service");
 const emojiGuildID = process.env['emoji_guild']
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
         // process guild registers and removes
         try {
             await client.guilds.fetch();
-            //await syncGuilds(client);
+            await syncGuilds(client);
 
         }catch (err){
             console.log("ready.js sync "+ err);

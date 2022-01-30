@@ -4,7 +4,7 @@ const { getChannel, changeChannelState, registerActiveChannel } = require("../..
 const getEmojis = require("../../_helpers/getEmojis");
 
 
-async function createGame (interaction, buttonDuration, language){
+async function createWordChainGame (interaction, buttonDuration, language){
 
     const emojis = await getEmojis(interaction.client);
 
@@ -32,7 +32,7 @@ async function createGame (interaction, buttonDuration, language){
 
     languages.TR.startNotification = "OYUN BAŞLADI!"+ `${emojis.ebu_leheb}` + "\nBaşlangıç harfi: " + startingLetter + "\nSözlük: " + dict + "\nMinimum kelime limiti: " + wordLimit;
     languages.EN.startNotification = "The game has started!" + `${emojis.ebu_leheb}`+ "StartingLetter: " + startingLetter + " Dictionary: " + dict + ", Min word limit: " + wordLimit;
-    L.startNotification = languages[language.toUpperCase()].startNotification;
+    //L.startNotification = languages[language.toUpperCase()].startNotification;
 
     //if there is already an active game session
     if (channel) {
@@ -40,7 +40,7 @@ async function createGame (interaction, buttonDuration, language){
             const collectorFunction = function () {
                 return changeChannelState(interaction.channelId, undefined, true, dict, wordLimit, startingLetter)
             }
-            const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, collectorFunction, L.startNotification)
+            const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, collectorFunction, L.startNotification, undefined , language)
 
             await interaction.reply({
                 content: L.content_1,
@@ -48,12 +48,12 @@ async function createGame (interaction, buttonDuration, language){
             })
         }else {
             await changeChannelState(interaction.channelId, undefined, true, dict, wordLimit,  startingLetter);
-            await interaction.reply(startNotification);
+            await interaction.reply(L.startNotification);
         }
     }else {
         await registerActiveChannel(interaction.channelId, interaction.guildId, undefined, true, dict, wordLimit, startingLetter, null);
-        await interaction.reply(startNotification);
+        await interaction.reply(L.startNotification);
     }
 }
 
-module.exports = createGame
+module.exports = createWordChainGame

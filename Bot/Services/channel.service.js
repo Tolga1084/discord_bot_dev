@@ -3,6 +3,32 @@ const db = process.env['AppDatabase']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 
 //TODO name change events; guild and channel --- channel name sync?
+
+async function channelModel (channel, wordChain) {
+
+    return {
+        _id: channel.id,
+        guildID: channel.guildID,
+        name: channel.name,
+        isActive: false,
+        activeGame: null,
+        games: [wordChain]
+    }
+}
+
+async function wordChainModel ({isActive, dict, wordLimit, startingLetter, lastAnswerer}) {
+
+    return {
+        isActive: isActive,
+        dict: dict,
+        wordLimit: wordLimit,
+        remainingWordLimit: wordLimit,
+        startingLetter: startingLetter,
+        lastAnswerer: lastAnswerer,
+        usedWords: []
+    }
+}
+
 async function getChannel(channelID, word){
 
     const mongoClient = await getMongoClient();
@@ -30,8 +56,8 @@ async function getActiveChannels(guildID){
 
     try {
         const channelQuery = await mongoClient.db(db).collection("channels").find(
-            {guild: guildID},
-            {options: { sort: { name: 1 }, projection: { isActive: 1, name:1, dict: 1, wordLimit: 1 }}})
+            {guild: guildID, isActive: true},
+            {options: { sort: { name: 1 }, projection: { activeGame: 1 }}})
 
         console.log("getActiveChannels: " + JSON.stringify(await channelQuery));
 

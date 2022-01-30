@@ -7,7 +7,7 @@ function getEmoji(emojiName,guild) {
 async function getEmojis(client) {
 
     //await guild.emojis.fetch(); already fetched at "ready" event
-    const emojiGuild = client.guilds.cache.get(emojiGuildID)
+    const guild = client.guilds.cache.get(emojiGuildID)
 
     const altarSopali =   await getEmoji("altarsopali", guild);
     const taam =   await getEmoji("taamtaaminandim", guild);

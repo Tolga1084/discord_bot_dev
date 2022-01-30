@@ -40,7 +40,7 @@ async function wordGame (message){
 
     if (wordQuery === null) {
         await message.reply(`${emojis.taam}`);
-        await remindStartingLetter(channel.startingLetter, channel.channel, emojis);
+        await remindStartingLetter(channel.startingLetter, message.channel, emojis);
         return;
     }else console.log("\nwordQuery madde" + wordQuery.madde + " \nwordQuery ID " + wordQuery._id)
 

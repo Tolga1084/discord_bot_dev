@@ -6,6 +6,8 @@ const talkedRecently = new Set();
 const cooldownTimer = 10000;
 const buttonDuration = 30000;
 
+//TODO configure permissions
+
 module.exports ={
     name: "interactionCreate",
     async execute(interaction){

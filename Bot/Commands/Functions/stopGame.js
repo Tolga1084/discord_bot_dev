@@ -66,7 +66,7 @@ async function stopGame (interaction, buttonDuration, language) {
 
                     console.log("stopGame forEach channel" + JSON.stringify(channel))
                     activeChannels.push(channel)
-                    message += channel.name + "\t" + channel.dict + "\t" + channel.wordLimit + "\n";
+                    message += channel.name + "\t" + channel.activeGame + "\n";
                     console.log("stopGame inside-forEach message: " + message);
                     console.log("stopGame inside-activeChannels" + activeChannels);
 

@@ -1,5 +1,5 @@
 const emojiGuildID = process.env['emoji_guild']
-
+// TODO themed emoji sets (LOTR, Star Wars ???)
 function getEmoji(emojiName,guild) {
     return guild.emojis.cache.find(emoji => emoji.name === emojiName);
 }

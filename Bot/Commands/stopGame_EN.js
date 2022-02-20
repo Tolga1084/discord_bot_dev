@@ -12,7 +12,7 @@ module.exports = {
                 .setDescription('Terminates the game on this channel.'))
         .addSubcommand(subcommand =>
             subcommand
-                .setName('all')
+                .setName('everywhere')
                 .setDescription('Terminates games on every channel')),
     async execute(interaction, buttonDuration) {
 

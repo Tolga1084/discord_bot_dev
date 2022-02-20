@@ -20,7 +20,9 @@
 
 // invite link:
 // https://discord.com/api/oauth2/authorize?client_id=893956585817272411&permissions=517543897152&scope=bot%20applications.commands
-//sd
+
+// node 16.10.0
+
 const {Client, Collection, Intents} = require('discord.js') ;
 const fs = require('fs')
 const getCommands = require('./Commands/Util/getCommands.js').getCommands;

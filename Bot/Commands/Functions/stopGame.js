@@ -1,4 +1,4 @@
-const { getChannel, getActiveChannels, changeChannelState } = require("../../Services/channel.service");
+const { getChannel, getActiveChannels, deactivateChannel } = require("../../Services/channel.service");
 const getEmojis  = require("../../_helpers/getEmojis");
 const { getConfirmationButton } = require(".././Buttons/ConfirmationButton");
 
@@ -37,7 +37,7 @@ async function stopGame (interaction, buttonDuration, language) {
         const channel = await getChannel(interaction.channelId);
         if(channel){
             if(channel.isActive){
-                await changeChannelState(interaction.channelId, undefined, false)
+                await deactivateChannel(interaction.channelId)
                 interaction.reply(L.terminateNotification_1).then(() => {
                     interaction.channel.send(`${emojis.terminator}`)
                 })
@@ -76,7 +76,7 @@ async function stopGame (interaction, buttonDuration, language) {
                 const collectorFunction = function () {
                     // TODO implement bulkwrite method?
                     activeChannels.forEach(channel => {
-                        changeChannelState(channel.id, false);
+                        deactivateChannel(channel.id);
                         channel.send(L.terminateNotification_2).then(() => { //TODO disable mention notifications
                             channel.send(`${emojis.terminator}`)
                         })

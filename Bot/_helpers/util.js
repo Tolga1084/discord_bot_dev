@@ -39,7 +39,7 @@
         }
     )
 }
-
+// TODO keep word statistics
  async function updateWordStat(wordID,playerTag){
     let t0 = await performance.now();
     let result = await dictionaryDB.updateOne(
@@ -82,4 +82,8 @@ function arrDiff (Arr1, Arr2)
     return Arr1.filter(x => !set2.has(x));
 }
 
-module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff}
+function getKeyByValue(object, value) {
+     return Object.keys(object).find(key => object[key] === value);
+ }
+
+module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff, getKeyByValue}

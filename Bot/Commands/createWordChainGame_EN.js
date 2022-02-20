@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const createWordChainGame = require("./Functions/createWordChainGame");
+const startWordChainGame = require("./Functions/createWordChainGame");
 
 module.exports = {
 
@@ -22,7 +22,7 @@ module.exports = {
 
 	execute: async function (interaction, buttonDuration) {
 
-		if(interaction.options.getSubcommand === "word_chain")
-		await createWordChainGame(interaction, buttonDuration, "EN")
+		if(interaction.options.getSubcommand() === "word_chain")
+		await startWordChainGame(interaction, buttonDuration, "EN")
 	}
 }

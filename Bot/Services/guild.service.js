@@ -20,7 +20,7 @@ async function guildModel (guild, language) {
         registerDate: new Date(),
         removeDate: null,
         activationDate: new Date(),
-        players: [],
+        games: {},
         oldNames: []
     }
 }
@@ -38,7 +38,7 @@ async function removeGuildUpdate () {
     return {hasBot: false, removeDate: new Date()}
 }
 
-async function guildCreate(guild) {
+async function createGuild(guild) {
 
     const mongoClient = await getMongoClient()
 
@@ -177,6 +177,7 @@ async function syncGuilds(client){
         }
 
         console.log("Number of total registered guilds: " + (guildArray.length + unregisteredGuilds.length) +
+            "\nNumber of active guilds: " + activeGuilds.length +
             "\nNumber of newly registered guilds: " + unregisteredGuilds.length +
             "\nNumber of removed guilds: " + removedGuilds.length +
             "\nNumber of reactivated guilds: " + reactivatedGuilds.length +
@@ -259,4 +260,4 @@ async function updateGuild (guild, update){
     }
 }
 
-module.exports = { guildCreate, removeGuild, syncGuilds, updateGuild, getGuild}
+module.exports = { createGuild, removeGuild, syncGuilds, updateGuild, getGuild}

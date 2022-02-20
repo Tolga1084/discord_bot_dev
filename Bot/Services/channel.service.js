@@ -3,41 +3,47 @@ const db = process.env['AppDatabase']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 
 //TODO name change events; guild and channel --- channel name sync?
+//TODO date fields
 
-async function channelModel (channel, wordChain) {
+async function channelModel (channel, isActive= false, activeGame = null) {
 
     return {
         _id: channel.id,
-        guildID: channel.guildID,
+        guildID: channel.guildId,
         name: channel.name,
-        isActive: false,
-        activeGame: null,
-        games: [wordChain]
+        isActive,
+        activeGame,
+        game: {}
     }
 }
 
-async function wordChainModel ({isActive, dict, wordLimit, startingLetter, lastAnswerer}) {
+const gameEnum = {
+    wordChain: "Word Chain"
+}
 
-    return {
-        isActive: isActive,
-        dict: dict,
-        wordLimit: wordLimit,
-        remainingWordLimit: wordLimit,
-        startingLetter: startingLetter,
-        lastAnswerer: lastAnswerer,
-        usedWords: []
+async function createChannel(channel) {
+
+    const mongoClient = await getMongoClient();
+
+    const channelInsert = await channelModel(channel)
+
+    try {
+        return await mongoClient.db(db).collection("channels").insertOne(channelInsert)
+
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR getChannel: ${error}`); // special case for some reason
+        }
+        throw error
     }
 }
 
-async function getChannel(channelID, word){
+async function getChannel(channelID){
 
     const mongoClient = await getMongoClient();
 
     const query = {_id: channelID}
-    const options = {options: { sort: { name: 1 }, projection: { usedWords: 0 }}}
-
-
-    if (word !== undefined) query['usedWords'] = word;
+    const options = { sort: { name: 1 }, projection: { game: 0 }}
 
     try {
         return await mongoClient.db(db).collection("channels").findOne(query, options);
@@ -57,7 +63,7 @@ async function getActiveChannels(guildID){
     try {
         const channelQuery = await mongoClient.db(db).collection("channels").find(
             {guild: guildID, isActive: true},
-            {options: { sort: { name: 1 }, projection: { activeGame: 1 }}})
+            {options: { sort: { name: 1 }, projection: { isActive: 1, activeGame: 1 }}})
 
         console.log("getActiveChannels: " + JSON.stringify(await channelQuery));
 
@@ -71,81 +77,25 @@ async function getActiveChannels(guildID){
     }
 }
 
-async function registerActiveChannel(channelID, guildID, channelName, isActive, dict, wordLimit, startingLetter, lastAnswerer){
+async function deactivateChannel( channelId ){
 
     const mongoClient = await getMongoClient();
 
-    const channel = {_id: channelID, guildID: guildID, name: channelName, isActive: isActive, dict: dict, wordLimit: wordLimit, remainingWordLimit: wordLimit, startingLetter: startingLetter, lastAnswerer: lastAnswerer, usedWords: []}
-
-    try {
-        const channelQuery = await mongoClient.db(db).collection("channels").insertOne(channel)
-
-        const collation = {
-            collation: {
-                locale: 'tr',
-                caseLevel: false,
-                caseFirst: 'off',
-                strength: 2,
-                numericOrdering: false,
-                alternate: 'non-ignorable',
-                maxVariable: 'punct',
-                normalization: false,
-                backwards: false,
-                version: '57.1'
-            }
-        }
-
-        const indexResult = await mongoClient.db(db).collection("channels").createIndex( {usedWords: 1}, {unique: true}, collation );
-        console.log(`Index created: ${indexResult}`);
-
-        console.log("registerActiveChannel " + JSON.stringify(channelQuery));
-
-        return channelQuery;
-
-    }catch (error) {
-        if (error instanceof MongoServerError) {
-            console.log(`ERROR registerActiveChannel: ${error}`); // special case for some reason
-        }
-        throw error
-    }
-}
-
-async function changeChannelState(channelID, name, isActive, dict, wordLimit, startingLetter, lastAnswerer, word){
-
-    const mongoClient = await getMongoClient();
-
-    const update = {}
-
-    if (isActive !== undefined) {
-        update['isActive'] = isActive
-    }
-    if (name !== undefined) update['name'] = name;
-    if (dict !== undefined) update['dict'] = dict;
-    if (wordLimit !== undefined) {
-        update['wordLimit'] = wordLimit;
-        update['remainingWordLimit'] = wordLimit;
-    }
-    if (startingLetter !== undefined) update['startingLetter'] = startingLetter;
-    if (lastAnswerer !== undefined) update['lastAnswerer'] = lastAnswerer;
-    if (word !== undefined) update['word'] = word;
-
-    console.log("changeChannelState update " + JSON.stringify(update));
+    const update = {isActive: false, activeGame: null}
 
     try {
         const channelQuery = await mongoClient.db(db).collection("channels").updateOne(
-            {_id: channelID},
+            {_id: channelId},
             {$set: update })
-
-        console.log("changeChannelState " + JSON.stringify(channelQuery));
 
         return channelQuery;
 
     }catch (error) {
         if (error instanceof MongoServerError) {
-            console.log(`ERROR changeChannelState: ${error}`); // special case for some reason
+            console.log(`ERROR stopWordChainGame: ${error}`); // special case for some reason
         }
         throw error
     }
 }
 
-module.exports = { registerActiveChannel, getChannel, getActiveChannels, changeChannelState }
+module.exports = { createChannel, getChannel, getActiveChannels, gameEnum, deactivateChannel }

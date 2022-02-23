@@ -1,38 +1,136 @@
 const { wordGame } = require("../Games/wordGame.js")
 const { getChannel, gameEnum } = require("../Services/channel.service.js");
+const { inspect } = require('util');
 
 //TODO collect user suggestions and bug reports through DM ?
 //TODO set language command
-module.exports ={
+//TODO caching
+const channelsCache = {}
+const wordGameQueue = {}
+
+const inspectOptions = {
+    showHidden: false,
+    depth: 1,
+    colors: true
+}
+
+module.exports = {
     name: "messageCreate",
-    async execute(message){
+    async execute(message) {
 
         if (message.author.bot) return;
         if (message.isInteraction) return
         if (message.content.startsWith('.')) return
 
-
-
         // check if the channel has an active game session
-        const channelQuery = await getChannel(message.channelId);
+
+        const channelId = message.channelId
+        const channelQuery = await getChannel(channelId);
         if (channelQuery === null) {
-            console.log("channel is not registered"+
-                        "\nmessage event, rejected message channel: "+message.channel.name+": "+message.channelId)
+            console.log("channel is not registered" +
+                "\nmessage event, rejected message channel: " + message.channel.name + ": " + message.channelId)
             return;
         }
         if (channelQuery.isActive === false) {
-            console.log("message event, channelQuery.isActive: "+(channelQuery.isActive)+
-                        "\nmessage event, rejected message channel: "+message.channel.name+": "+message.channelId)
+            console.log("message event, channelQuery.isActive: " + (channelQuery.isActive) +
+                "\nmessage event, rejected message channel: " + message.channel.name + ": " + message.channelId)
             return;
         }
-            // TODO threaded process for each game
-        if (channelQuery.activeGame === gameEnum.wordChain){
-            console.log("\n\n ---------------- WORD CHAIN ----------------" +
-                "\n MESSAGE => " + message.content + "\n")
-            let t0 = performance.now();
-            await wordGame(message);
-            let t1 = performance.now();
-            console.log("messageCreate wordGame perf: " + (t1-t0));
+
+        // TODO threaded process for each game
+        // WORD CHAIN
+        if (channelQuery.activeGame === gameEnum.wordChain) {
+
+            outputConsoleLog(message);
+
+            if (!wordGameQueue[channelId]) {
+
+                wordGameQueue[channelId] = []
+                initiateWordChainQueue(channelId, message);
+            }
+
+            else if (wordGameQueue[channelId].length === 0) {
+
+                initiateWordChainQueue(channelId, message);
+            }
+            else {
+                wordGameQueue[channelId].push(message)
+                console.log("\nthere is a queue in the channel...")
+                console.log("\tqueued " + message.content)
+                console.log("\tqueued words: "+ inspect(wordGameQueue[channelId], inspectOptions))
+            }
         }
     }
+}
+
+async function processWordGameQueue(channelId) {
+
+    console.log("\nprocessing Word Chain Queue...")
+    while (wordGameQueue[channelId].length > 0) {
+
+        const nextMessage = wordGameQueue[channelId][0]
+        console.group()
+        console.log("\n------ processing next message: '" + nextMessage.content +  "' ------" )
+
+        let t0 = performance.now()
+        const wordGameResult = await wordGame(nextMessage)
+        let t1 = performance.now()
+        console.log("\nwordGame performance: " + (t1 - t0) + " ms");
+
+        console.log("\nthe message is processed")
+        console.groupEnd()
+        wordGameQueue[channelId].shift();
+    }
+
+    console.log("\nWord Chain Queue completed ! ")
+}
+
+function initiateWordChainQueue(channelId, message) {
+
+    console.log("\ninitiating Word Chain Queue...")
+    wordGameQueue[channelId].push(message)
+    console.log("\tqueued " + message.content)
+    console.log("\tqueued words: "+ inspect(wordGameQueue[channelId], inspectOptions))
+
+    processWordGameQueue(channelId)
+}
+
+
+async function outputConsoleLog(message) {
+    console.log("\n\n------------- WORD CHAIN -------------" +
+        "\nMESSAGE => " + message.content   +
+        "\nGUILD   => " + message.guildId   + " / " + message.guild.name +
+        "\nCHANNEL => " + message.channelId + " / " + message.channel.name +
+        "\nUSER    => " + message.author.id + " / " + message.author.username +
+        "\nDATE    => " + new Date(Date.now()).toISOString()
+    )
+    // return or bring up the table (costs performance: 2-4 ms)
+    return
+    const consoleTableArray = []
+
+    consoleTableArray.push({
+        "TYPE:": "GUILD",
+        "DATA:": message.guild.name,
+        "ID / DATE:": message.guildId
+    })
+
+    consoleTableArray.push({
+        "TYPE:": "CHANNEL",
+        "DATA:": message.channel.name,
+        "ID / DATE:": message.channelId
+    })
+
+    consoleTableArray.push({
+        "TYPE:": "USER",
+        "DATA:": message.author.username,
+        "ID / DATE:": message.author.id
+    })
+
+    consoleTableArray.push({
+        "TYPE:": "MESSAGE",
+        "DATA:": message.content,
+        "ID / DATE:": message.createdAt
+    })
+
+    console.table(consoleTableArray)
 }

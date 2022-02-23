@@ -5,7 +5,7 @@ const stopGame = require("./Functions/stopGame.js")
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Terminates games on either this or every channel.')
+        .setDescription('Terminates games on either this or each channel.')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('here')
@@ -13,7 +13,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('everywhere')
-                .setDescription('Terminates games on every channel')),
+                .setDescription('Terminates games on each channel')),
     async execute(interaction, buttonDuration) {
 
         await stopGame(interaction,buttonDuration,"EN")

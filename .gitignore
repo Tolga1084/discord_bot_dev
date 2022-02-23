@@ -1,2 +1,6 @@
 /node_modules/
 /.idea/
+/node12.17.bat
+/node16.10.bat
+/mongod.exe - Shortcut.lnk
+/MongoDBCompass.lnk

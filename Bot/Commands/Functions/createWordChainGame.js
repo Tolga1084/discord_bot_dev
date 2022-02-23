@@ -1,13 +1,20 @@
 const { randomStartingLetterTR, getKeyByValue } = require("../../_helpers/util");
 const { getConfirmationButton } = require("../Buttons/ConfirmationButton");
 const { getChannel,  gameEnum, createChannel } = require("../../Services/channel.service");
-const { createWordChainGame } = require("../../Services/Games/wordChain.service")
+const { createWordChainGame, wordLimitRange } = require("../../Services/Games/wordChain.service")
 const getEmojis = require("../../_helpers/getEmojis");
+const { inspect } = require('util');
 
+const inspectOptions = {
+    showHidden: false,
+    depth: null,
+    colors: true
+}
 
 async function startWordChainGame (interaction, buttonDuration, language){
 
-    console.log( "\n CREATE WORD CHAIN GAME => " + interaction.channel.name + "\t" + interaction.channelId +  "\n")
+    console.log( "\n ------------- CREATE WORD CHAIN GAME -------------  \n" +
+        "CHANNEL => " + interaction.channel.name + "\t /ID: " + interaction.channelId +  "\n\n")
 
     const emojis = await getEmojis(interaction.client);
 
@@ -34,11 +41,24 @@ async function startWordChainGame (interaction, buttonDuration, language){
     const channel = await getChannel(interaction.channelId)
     const dict = interaction.options.getString(L.subCommand_dictionary)
     const wordLimit = interaction.options.getInteger(L.subCommand_min_word_limit)
-    const startingLetter = await randomStartingLetterTR();
+    const startingLetter = randomStartingLetterTR()
 
-    languages.TR.startNotification = "KELİME ZİNCİRİ BAŞLADI!"+ `${emojis.ebu_leheb}` + "\n\nSözlük: " + dict + "\nMinimum kelime limiti: " + wordLimit + "\n\n***Başlangıç harfi:*** " + "***" + startingLetter + "***";
-    languages.EN.startNotification = "WORD CHAIN HAS STARTED!" + `${emojis.ebu_leheb}`+ "\n\nDictionary: " + dict + "\nMin word limit: " + wordLimit + "\n\n***Starting Letter:*** " + "***" + startingLetter + "***" ;
-    //L.startNotification = languages[language.toUpperCase()].startNotification;
+    console.log("DICT            => " + dict + "\n" +
+                "WORD_LIMIT      => " + wordLimit + "\n" +
+                "STARTING_LETTER => " + startingLetter + "\n\n")
+
+    languages.TR.wordLimitError = "Kelime limiti, 10 ila 1000 arasında olmalı ! "  + `${emojis.altarSopali}`;
+    languages.EN.wordLimitError = "Word limit has to be between 10 and 1000 ! "  + `${emojis.altarSopali}`;
+
+    if ( (wordLimit < wordLimitRange.min) || (wordLimit > wordLimitRange.max) ) {
+        interaction.reply({
+            content: L.wordLimitError
+            })
+        throw "wordLimit out of Range ! " + inspect(wordLimitRange, options)
+    }
+
+    languages.TR.startNotification = "KELİME ZİNCİRİ BAŞLADI!"+ "\n\nSözlük: " + dict + "\nMinimum kelime limiti: " + wordLimit + "\n\n***Başlangıç harfi:*** " + "***" + startingLetter + "***";
+    languages.EN.startNotification = "WORD CHAIN HAS STARTED!" + "\n\nDictionary: " + dict + "\nMin word limit: " + wordLimit + "\n\n***Starting Letter:*** " + "***" + startingLetter + "***";
 
     //if there is already an active game session
 
@@ -46,36 +66,35 @@ async function startWordChainGame (interaction, buttonDuration, language){
         channelId: interaction.channelId,
         dict,
         wordLimit,
-        startingLetter,
+        startingLetter
+    }
+
+    const start = function () {
+
+        createWordChainGame(wordChainGame)
+        console.log(languages.EN.startNotification + "\n")
+
+        interaction.reply(L.startNotification);
+        interaction.channel.send(`${emojis.ebu_leheb}`)
     }
 
     if (channel) {
         if (channel.isActive) {
-            const collectorFunction = function () {
 
-                createWordChainGame(wordChainGame)
-                console.log(languages.EN.startNotification+ interaction.channel.name + "\t" + interaction.channelId +  "\n")
-            }
-            const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, collectorFunction, L.startNotification, undefined , language)
+            const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, start, L.startNotification, language)
 
             await interaction.reply({
                 content: L.content_1A + " - **" + L[getKeyByValue(gameEnum, channel.activeGame)] + "** -\n" + L.content_1B,
                 components: [row]
             })
-        }else {
-            await createWordChainGame(wordChainGame);
-            console.log(languages.EN.startNotification+ interaction.channel.name + "\t" + interaction.channelId +  "\n")
 
-            await interaction.reply(L.startNotification);
-        }
+        }else start()
+
     }else {
         await createChannel(interaction.channel);
-        console.log("Created Channel\n" + interaction.channel.name + "\t" + interaction.channelId +  "\n")
+        console.log("Created Channel" + "\n")
 
-        await createWordChainGame(wordChainGame);
-        console.log(languages.EN.startNotification+ interaction.channel.name + "\t" + interaction.channelId +  "\n")
-
-        await interaction.reply(L.startNotification);
+        start()
     }
 }
 

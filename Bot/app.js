@@ -16,12 +16,15 @@
   - 1vs1 battle
   - voice Commands
   - update system
+  - battle royale mode ("kelime kapmaca") (similar to musical chairs and hangman)
+  - game mode where player tries to guess a word from its definition
 */
 
 // invite link:
 // https://discord.com/api/oauth2/authorize?client_id=893956585817272411&permissions=517543897152&scope=bot%20applications.commands
 
 // node 16.10.0
+// mongoDB 5.0.3
 
 const {Client, Collection, Intents} = require('discord.js') ;
 const fs = require('fs')

@@ -3,11 +3,13 @@ const db = process.env['AppDatabase']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 
 // check if the word exists in the dictionary.
-// first looks for exact matches; if not, then looks for base matches where (â == a)
+// firstly, looks for exact matches; if not, then looks for base matches where (â == a)
 
 async function dictQuery (word) {
 
     const mongoClient = await getMongoClient();
+
+    let alternated = false // if matched with strength 2, no need to add the word to usedWords
 
     try {
         let res = await mongoClient.db(db).collection("TR_dictionary2").findOne({madde: word}, {
@@ -15,17 +17,23 @@ async function dictQuery (word) {
                 locale: 'tr',
                 strength: 2
             }
+
         });
 
-        if (res === null) {
+        // dont look for base matches if the word already contains 'â', to prevent for example "lâle" returning "lale"
+        if ((res === null) && (! word.includes('â') ) ) {
             res = await mongoClient.db(db).collection("TR_dictionary2").findOne({madde: word}, {
                 collation: {
                     locale: 'tr',
                     strength: 1
                 }
             })
+            alternated = word // add the word to usedWords to prevent for example "kağıt" being used repeatedly, since "kağıt" registers only as "kâğıt" to usedWords.
         }
-        return res;
+        return {
+            wordQuery: res,
+            alternated
+        };
 
     }catch (error) {
         if (error instanceof MongoServerError) {

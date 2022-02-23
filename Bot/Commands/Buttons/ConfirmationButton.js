@@ -2,7 +2,7 @@ const { ms } = require("../../_helpers/util.js")
 const { MessageActionRow, MessageButton } = require('discord.js')
 const deleteTimer = 10000;
 
-async function getConfirmationButton(interaction, label, style, duration, collectorFunction, update, emoji, language){
+async function getConfirmationButton(interaction, label, style, duration, collectorFunction, update, language){
 
     const uniqueID = interaction.channelId + interaction.user.id + ms();
 
@@ -47,9 +47,7 @@ async function getConfirmationButton(interaction, label, style, duration, collec
         isClicked = true;
         row.components[0].setDisabled(true);
         collectorFunction();
-        interaction.editReply({content: update, components: [row]}).then(x => {
-            if(emoji !== undefined) interaction.channel.send(`${emoji}`)
-        })
+        interaction.editReply({content: update, components: [row]})
     });
 
     setTimeout( () => {

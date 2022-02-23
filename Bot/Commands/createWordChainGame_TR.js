@@ -16,7 +16,7 @@ module.exports = {
 						.addChoice('TR', 'TR'))
 				.addIntegerOption(option =>
 					option.setName('min_kelime_limiti')
-						.setDescription('Oyunun bitmesi için gerekli minimum kelime sayısı.')
+						.setDescription('Oyunun bitmesi için gerekli asgari kelime sayısı. (min: 10, max:1000)')
 						.setRequired(true)),
 		),
 

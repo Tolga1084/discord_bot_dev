@@ -1,9 +1,12 @@
 const { MongoServerError } = require('mongodb');
 const db = process.env['AppDatabase']
 const getMongoClient = require("../../_helpers/getMongoClient.js")
+const { randomStartingLetterTR } = require("../../_helpers/util");
 const { gameEnum } = require("../channel.service");
 
 async function wordChainModel ({dict, wordLimit, startingLetter}) {
+
+    if(!startingLetter) startingLetter = randomStartingLetterTR()
 
     return {
         name: gameEnum.wordChain,
@@ -16,11 +19,20 @@ async function wordChainModel ({dict, wordLimit, startingLetter}) {
     }
 }
 
-async function createWordChainGame({ channelId, dict, wordLimit, startingLetter, lastAnswerer, word }){
+const victoryTypes = {
+    Classic: {score: 100}
+}
+
+const wordLimitRange = {
+    min: 10,
+    max: 1000
+}
+
+async function createWordChainGame({ channelId, dict, wordLimit, startingLetter}){
 
     const mongoClient = await getMongoClient();
 
-    const game = await wordChainModel({ isActive: true, dict, wordLimit, startingLetter, lastAnswerer })
+    const game = await wordChainModel({ dict, wordLimit, startingLetter})
 
     const update = {isActive: true, activeGame: game.name, game }
 
@@ -63,26 +75,46 @@ async function getWordChainGame(channelID, word){
 
     const mongoClient = await getMongoClient();
 
-    let query = {_id: channelID}
-    const options = { sort: { name: 1 }, projection: { game: {usedWords: 0}}}
+    const projection = { game: {
+                            dict:1,
+                            remainingWordLimit: 1,
+                            wordLimit: 1,
+                            startingLetter: 1,
+                            lastAnswerer:1 }}
 
-    if (word !== undefined){
-        query = {
-            _id: channelID,
-            "game.usedWords": word
-        }
-        options.projection = {
-            _id: 1
-        }
-        options.collation = {
-            locale: 'tr',
-            strength: 2
-        }
-    }
+    let query = {_id: channelID}
+    const options = { projection }
 
     try {
-        return await mongoClient.db(db).collection("channels").findOne(query, options);
+        if (word) {
 
+            query = [
+                {
+                    '$match': {
+                        '_id': channelID
+                    }
+                }, {
+                    '$addFields': {
+                        'isUsed': {
+                            '$in': [
+                                word, '$game.usedWords'
+                            ]
+                        }
+                    }
+                }, {
+                    '$project': {
+                         ...projection,
+                        isUsed: 1
+                    }
+                }
+            ]
+
+            const result = await mongoClient.db(db).collection("channels").aggregate(query).toArray();
+            return result[0]
+        }
+        else {
+            return await mongoClient.db(db).collection("channels").findOne(query, options);
+        }
     }catch (error) {
         if (error instanceof MongoServerError) {
             console.log(`ERROR getWordChainGame: ${error}`); // special case for some reason
@@ -91,17 +123,17 @@ async function getWordChainGame(channelID, word){
     }
 }
 
-async function updateWordChainGame(channelID, word, lastAnswerer ){
+async function updateWordChainGame(channelID, { wordArr, lastAnswerer, wordCount} ){
 
     const mongoClient = await getMongoClient();
 
     const query = {_id: channelID}
 
-    const update = {
-        $addToSet : { 'game.usedWords': word },
-        $set: { 'game.lastAnswerer': lastAnswerer.id, 'game.startingLetter': word.slice(-1).toLocaleLowerCase("tr-TR") },
-        $inc: { 'game.remainingWordLimit': -1}
-    }
+    const update = {}
+
+    if (wordArr) update["$addToSet"] = { 'game.usedWords': {$each: wordArr }}
+    if (lastAnswerer) update["$set"] = { 'game.lastAnswerer': lastAnswerer, 'game.startingLetter': wordArr[0].slice(-1).toLocaleLowerCase("tr-TR") }
+    if (wordCount) update["$inc"] = { 'game.remainingWordLimit': wordCount}
 
     try {
         return await mongoClient.db(db).collection("channels").updateOne(query, update);
@@ -114,9 +146,8 @@ async function updateWordChainGame(channelID, word, lastAnswerer ){
     }
 }
 
-
-
-async function updatePlayerStat(guildId,{userId, userTag, points, word }) {
+// victory types: classic, ...
+async function updatePlayerStat(guildId, { userId, userTag, points, word, victoryType }) {
 
     const mongoClient = await getMongoClient();
 
@@ -128,6 +159,7 @@ async function updatePlayerStat(guildId,{userId, userTag, points, word }) {
         }
     }
     if (userTag) update["$set"] = { name: userTag }
+    if (victoryType) update.$inc["games.wordChain.victory." + victoryType] = 1
 
     try{
         const userUpdate = mongoClient.db(db).collection("users").updateOne(
@@ -137,13 +169,14 @@ async function updatePlayerStat(guildId,{userId, userTag, points, word }) {
 
         const guildUpdate = mongoClient.db(db).collection("guilds").updateOne(
             {_id: guildId},
-            {$inc: {["games.wordChain." + userId]: points}}
+            {$inc: {["games.wordChain.scoreBoard." + userId]: points}}
         )
 
         return await Promise.all([
             userUpdate,
             guildUpdate
         ])
+
     }catch (error) {
         if (error instanceof MongoServerError) {
             console.log(`ERROR updatePlayerStat: ${error}`); // special case for some reason
@@ -152,4 +185,4 @@ async function updatePlayerStat(guildId,{userId, userTag, points, word }) {
     }
 }
 
-module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat}
+module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat, victoryTypes, wordLimitRange }

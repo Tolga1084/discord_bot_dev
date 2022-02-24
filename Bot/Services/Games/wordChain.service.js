@@ -123,7 +123,7 @@ async function getWordChainGame(channelID, word){
     }
 }
 
-async function updateWordChainGame(channelID, { wordArr, lastAnswerer, wordCount} ){
+async function updateWordChainGame(channelID, { startingLetter, wordArr, lastAnswerer, wordCount} ){
 
     const mongoClient = await getMongoClient();
 
@@ -132,7 +132,7 @@ async function updateWordChainGame(channelID, { wordArr, lastAnswerer, wordCount
     const update = {}
 
     if (wordArr) update["$addToSet"] = { 'game.usedWords': {$each: wordArr }}
-    if (lastAnswerer) update["$set"] = { 'game.lastAnswerer': lastAnswerer, 'game.startingLetter': wordArr[0].slice(-1).toLocaleLowerCase("tr-TR") }
+    if (lastAnswerer) update["$set"] = { 'game.lastAnswerer': lastAnswerer, 'game.startingLetter': startingLetter }
     if (wordCount) update["$inc"] = { 'game.remainingWordLimit': wordCount}
 
     try {

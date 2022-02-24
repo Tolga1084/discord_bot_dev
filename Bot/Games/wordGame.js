@@ -15,7 +15,7 @@ const meta = {
     gameType: "Classic"
 }
 
-async function wordGame (message, startingLetter, lastAnswerer){
+async function wordGame (message){
 
     // register user
     const register_promise = registerUser(message.author.id, message.author.username)
@@ -26,7 +26,7 @@ async function wordGame (message, startingLetter, lastAnswerer){
     // validate the word
     const word = message.content.toString().toLocaleLowerCase("tr-TR");
 
-    if(!await isWordValid(message, word, emojis)) return "word is not valid";
+    if(!await isWordValid(message, word, emojis)) return false;
 
     // check startingLetter and lastAnswerer
     let t0 = performance.now();
@@ -47,10 +47,11 @@ async function wordGame (message, startingLetter, lastAnswerer){
     console.log("\nwordQuery done in " + (t1 - t0) + " milliseconds.");
 
     if (wordQuery === null) {
+        message.react('❌')
         message.reply(`${emojis.taam}`);
         await remindStartingLetter(wordChain.game.startingLetter, message.channel, emojis);
         console.log("Word does not exist in the dictionary => " + wordChain.game.dict)
-        return;
+        return false;
     }
 
     // check if the word is used already
@@ -61,7 +62,7 @@ async function wordGame (message, startingLetter, lastAnswerer){
             content: 'bu kelime zaten kullanıldı!' + `${emojis.altarSopali}`
         })
         console.log("\nAlready used!")
-        return;
+        return false;
     }
 
     // check win condition
@@ -73,22 +74,23 @@ async function wordGame (message, startingLetter, lastAnswerer){
         }
         else {
             message.reply("oyunun bitebilmesi için en az " + (wordChain.game.remainingWordLimit) + " kelime daha gerekli !" + `${emojis.altarSopali}`)
-            return;
+            return false;
         }
     }
 
     // SUCCESS
     message.react('✅')
-    if (dictWord.length > 7 && dictWord.length < 11) message.react(emojis.cemismont);
-    if (dictWord.length > 12) message.react(emojis.ebu_leheb)
-    if (dictWord.length > 17) message.react(emojis.terminator)
+    let points = dictWord.length
+    if (dictWord.length > 7 && dictWord.length < 11) {message.react(emojis.cemismont); points += 5}
+    if (dictWord.length > 12) {message.react(emojis.ebu_leheb); points += 8}
+    if (dictWord.length > 17) {message.react(emojis.terminator); points += 15}
 
     console.log("\nwordQuery madde " + dictWord + "\nwordQuery ID " + wordQuery._id)
 
     const playerUpdate = {
         userId: message.author.id,
         userTag: message.author.username,
-        points: dictWord.length,
+        points,
         word: dictWord
     }
 
@@ -112,9 +114,10 @@ async function wordGame (message, startingLetter, lastAnswerer){
     await register_promise
     updatePlayerStat(message.guildId, playerUpdate)
 
-    if(winFlag) return;
+    if(winFlag) return "reset";
 
     const wordChainUpdate =  {
+        startingLetter: word.slice(-1).toLocaleLowerCase("tr-TR"),
         wordArr: [word],
         lastAnswerer: message.author.id,
         wordCount: -1
@@ -127,7 +130,7 @@ async function wordGame (message, startingLetter, lastAnswerer){
 
     updateWordChainGame(message.channelId, wordChainUpdate)
 
-    console.log("\nreached end")
+    return wordChainUpdate
 
 }
 

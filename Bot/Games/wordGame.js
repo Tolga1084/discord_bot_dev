@@ -2,7 +2,7 @@ const getEmojis = require("../_helpers/getEmojis");
 const dictQuery = require("../Services/dictionary.service");
 const { registerUser } = require("../Services/users.service");
 const { getWordChainGame, updateWordChainGame, updatePlayerStat, createWordChainGame, victoryTypes } = require("../Services/Games/wordChain.service");
-const { isOneLine, isLetter, isOneWord, checkStartingLetter } = require("../_helpers/util");
+const { isOneLine, isLetter, isOneWord, checkStartingLetter, sendThenDelete, replyThenDelete } = require("../_helpers/util");
 const { inspect } = require('util');
 
 const inspectOptions = {
@@ -12,7 +12,8 @@ const inspectOptions = {
 }
 
 const meta = {
-    gameType: "Classic"
+    gameType: "Classic",
+    isCleanMessaging: true
 }
 
 async function wordGame (message){
@@ -48,8 +49,9 @@ async function wordGame (message){
 
     if (wordQuery === null) {
         message.react('❌')
-        message.reply(`${emojis.taam}`);
-        await remindStartingLetter(wordChain.game.startingLetter, message.channel, emojis);
+        let reply = `${emojis.taam}`
+        replyThenDelete(message, reply, meta.isCleanMessaging)
+        //await remindStartingLetter(wordChain.game.startingLetter, message.channel, emojis);
         console.log("Word does not exist in the dictionary => " + wordChain.game.dict)
         return false;
     }
@@ -58,9 +60,9 @@ async function wordGame (message){
     const dictWord = wordQuery.madde.toString().toLocaleLowerCase("tr-TR");
 
     if (wordChain.isUsed) {
-        message.reply({
-            content: 'bu kelime zaten kullanıldı!' + `${emojis.altarSopali}`
-        })
+
+        let reply = 'bu kelime zaten kullanıldı!' + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
         console.log("\nAlready used!")
         return false;
     }
@@ -73,7 +75,8 @@ async function wordGame (message){
             winFlag = true
         }
         else {
-            message.reply("oyunun bitebilmesi için en az " + (wordChain.game.remainingWordLimit) + " kelime daha gerekli !" + `${emojis.altarSopali}`)
+            let reply = "oyunun bitebilmesi için en az " + (wordChain.game.remainingWordLimit) + " kelime daha gerekli !" + `${emojis.altarSopali}`
+            replyThenDelete(message,reply,meta.isCleanMessaging)
             return false;
         }
     }
@@ -136,25 +139,29 @@ async function wordGame (message){
 
 async function isWordValid (message, word, emojis) {
 
+    let reply
     if (!isOneLine(word)) {
-        message.reply({
-            content: 'Tek satır neyine yetmiyor!' + `${emojis.altarSopali}`
-        })
+
+        reply = 'Tek satır neyine yetmiyor!' + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
+
         return false;
     }
 
     if (!isLetter(word)) {
-        message.reply({
-            content: 'Sadece harf kullanabilirsin!' + `${emojis.altarSopali}`
-        })
+
+        reply = 'Sadece harf kullanabilirsin!' + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
+
         return false;
     }
 
     if (!isOneWord(word)) {
 
-        message.reply({
-            content: 'Sadece tek kelime kullanabilirsin!' + `${emojis.altarSopali}`
-        })
+
+        reply= 'Sadece tek kelime kullanabilirsin!' + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
+
         return false
     }
     return true
@@ -163,19 +170,19 @@ async function isWordValid (message, word, emojis) {
 async function isWordChainValid (message, word, playerID, lastAnswerer, startingLetter, emojis) {
 
     // TODO temporarily disabled  -playerID should be object
+    let reply
     if (lastAnswerer === "playerID") {
 
-        message.reply({
-            content: 'Sen sıranı savdın!' + `${emojis.altarSopali}`
-        })
+        reply = 'Sen sıranı savdın!' + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
+
         return false
     }
 
     if (!checkStartingLetter(word, startingLetter)) {
 
-        message.reply({
-            content: 'başlangıç harfi ' + `**${startingLetter.toLocaleUpperCase("tr-TR")}**` + `${emojis.altarSopali}`
-        })
+        reply = 'başlangıç harfi ' + `**${startingLetter.toLocaleUpperCase("tr-TR")}**` + `${emojis.altarSopali}`
+        replyThenDelete(message,reply,meta.isCleanMessaging)
 
         return false
     }

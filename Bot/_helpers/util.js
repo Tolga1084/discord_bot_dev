@@ -86,4 +86,22 @@ function getKeyByValue(object, value) {
      return Object.keys(object).find(key => object[key] === value);
  }
 
-module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff, getKeyByValue}
+ async function replyThenDelete (message, reply, deleteMessage= false, duration = 5000){
+     message.reply({
+         content: reply
+     }).then(msg => {
+         setTimeout(() => msg.delete(), duration)
+     })
+     if(deleteMessage) setTimeout(() => message.delete(), duration)
+ }
+
+ async function sendThenDelete (message, reply, duration = 5000){
+     await message.channel.send({
+         content: reply
+     })
+     setTimeout(() => message.delete(), duration)
+
+ }
+
+
+module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff, getKeyByValue, replyThenDelete, sendThenDelete}

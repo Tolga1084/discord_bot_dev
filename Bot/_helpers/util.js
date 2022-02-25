@@ -90,9 +90,15 @@ function getKeyByValue(object, value) {
      message.reply({
          content: reply
      }).then(msg => {
+         if (msg)
          setTimeout(() => msg.delete(), duration)
+         else setTimeout(() => message.deleteReply(), duration)
      })
-     if(deleteMessage) setTimeout(() => message.delete(), duration)
+     if(deleteMessage) {
+         if (!message.isInteraction) setTimeout(() => message.delete(), duration)
+         else throw "interaction cannot be deleted!"
+     }
+
  }
 
  async function sendThenDelete (message, reply, duration = 5000){

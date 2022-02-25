@@ -4,7 +4,6 @@ const { inspect } = require('util');
 
 //TODO collect user suggestions and bug reports through DM ?
 //TODO set language command
-//TODO caching
 //TODO queue all messages ??? test if there is need...
 const channelsCache = {}
 const wordGameQueue = {}
@@ -25,7 +24,6 @@ module.exports = {
         if (message.content.startsWith('.')) return
 
         // check if the channel has an active game session
-
         const channelId = message.channelId
         const channelQuery = await getChannel(channelId);
         if (channelQuery === null) {

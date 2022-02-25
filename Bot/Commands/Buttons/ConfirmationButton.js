@@ -8,7 +8,7 @@ async function getConfirmationButton(interaction, label, style, duration, collec
 
     const languages = {
         TR: {
-            warning1: "Çek elini, başkasının butonu o!",
+            warning1: "Çek elini! Başkasının butonu o!",
             warning2: "Bu etkileşim, zaman aşımına uğradı!",
         },
 

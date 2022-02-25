@@ -21,7 +21,7 @@
 */
 
 // invite link:
-// https://discord.com/api/oauth2/authorize?client_id=893956585817272411&permissions=517543897152&scope=bot%20applications.commands
+// https://discord.com/api/oauth2/authorize?client_id=893956585817272411&permissions=534790012736&scope=bot%20applications.commands
 
 // node 16.10.0
 // mongoDB 5.0.3

@@ -5,8 +5,8 @@ const clientID = process.env['clientID']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 const util = require('util')
 
-//languages: "EN","TR"
-// reactivation is when a guild that had the bot, reinvites it
+// languages: "EN","TR"
+// reactivation is when a guild that had the bot, invites it back
 async function guildModel (guild, language) {
     let id;
     if(guild._id !== undefined) id = guild._id;
@@ -19,7 +19,7 @@ async function guildModel (guild, language) {
         interfaceLanguage: language,
         registerDate: new Date(),
         removeDate: null,
-        activationDate: new Date(),
+        reactivationDate: null,
         games: {},
         oldNames: []
     }
@@ -27,9 +27,11 @@ async function guildModel (guild, language) {
 
 async function reactivatedGuildUpdate (guild) {
 
-    const {name, hasBot, activationDate} = await guildModel(guild)
+    const reactivationDate = new Date()
 
-    return {name, hasBot, activationDate}
+    const {name, hasBot} = await guildModel(guild)
+
+    return {name, hasBot, reactivationDate}
 
 }
 
@@ -40,20 +42,32 @@ async function removeGuildUpdate () {
 
 async function createGuild(guild) {
 
+    console.log("\n\n------------- CREATE GUILD -------------")
+
     const mongoClient = await getMongoClient()
 
-    const newGuild = await guildModel(guild,"EN");
-    const reactivatedGuild = await reactivateGuildUpdate(guild);
+    console.log("The bot has been invited to " + guild.name + " /ID: " + guild.id)
 
     try {
-        const result = await mongoClient.db(db).collection("guilds").updateOne(
-            {_id: guild.id},
-            {$set: reactivatedGuild},
-            {$setOnInsert: {newGuild}},
-            {upsert: true}
+        const isRegistered = await mongoClient.db(db).collection("guilds").findOne(
+            {_id: guild.id}
         )
 
-        console.log(guild.name + ' is a new guild!', result)
+        if (isRegistered) {
+            const reactivatedGuild = await reactivatedGuildUpdate(guild);
+
+            const result = await mongoClient.db(db).collection("guilds").updateOne(
+                {_id: guild.id},
+                {$set: reactivatedGuild},
+            )
+            console.log("The guild has been reactivated ! " + guild.name + " /ID: " + guild.id, result)
+        }
+        else {
+            const newGuild = await guildModel(guild,"EN");
+
+            const result = await mongoClient.db(db).collection("guilds").insertOne(newGuild)
+            console.log("The guild has been registered ! " + guild.name + " /ID: " + guild.id, result)
+        }
 
     } catch (error) {
         if (error instanceof MongoServerError) {
@@ -65,15 +79,24 @@ async function createGuild(guild) {
 
 async function removeGuild(guild){
 
+    console.log("\n\n------------- REMOVE GUILD -------------")
+
     const mongoClient = await getMongoClient()
 
     const update = await removeGuildUpdate()
 
     try {
-        mongoClient.db(db).collection("guilds").updateOne(
+        await mongoClient.db(db).collection("guilds").updateOne(
             {_id: guild.id},
             {$set: update}
         )
+
+        const result = await mongoClient.db(db).collection("channels").deleteMany(
+            {guildID: guild.id}
+        )
+
+        console.log("The guild has been removed ! " + guild.name + " /ID: " + guild.id, result)
+        console.log("Number of channels deleted: " + result.deletedCount + " // " + guild.name + " /ID: " + guild.id, result)
     } catch (error) {
         if (error instanceof MongoServerError) {
             console.log(`ERROR removeGuild: ${error}`); // special case for some reason
@@ -178,7 +201,7 @@ async function syncGuilds(client){
 
         console.log("Number of total registered guilds: " + (guildArray.length + unregisteredGuilds.length) +
             "\nNumber of active guilds: " + activeGuilds.length +
-            "\nNumber of newly registered guilds: " + unregisteredGuilds.length +
+            "\n\nNumber of newly registered guilds: " + unregisteredGuilds.length +
             "\nNumber of removed guilds: " + removedGuilds.length +
             "\nNumber of reactivated guilds: " + reactivatedGuilds.length +
             "\nNumber of renamed guilds: " + renamedGuilds.length +
@@ -210,7 +233,6 @@ async function syncGuilds(client){
             }
             catch(error){
                 console.log("\nFailed to deploy commands! => Guild ID: " + guild._id + ", Name: " + guild.name)
-                continue
             }
         }
 

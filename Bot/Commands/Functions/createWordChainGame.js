@@ -54,7 +54,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
         interaction.reply({
             content: L.wordLimitError
             })
-        throw "wordLimit out of Range ! " + inspect(wordLimitRange, options)
+        throw "wordLimit out of Range ! " + inspect(wordLimitRange, inspectOptions)
     }
 
     languages.TR.startNotification = "KELİME ZİNCİRİ BAŞLADI!"+ "\n\nSözlük: " + dict + "\nMinimum kelime limiti: " + wordLimit + "\n\n***Başlangıç harfi:*** " + "***" + startingLetter + "***";

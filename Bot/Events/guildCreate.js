@@ -6,10 +6,10 @@ module.exports = {
     name: "guildCreate",
     async execute(guild) {
 
-        console.log("joined "+ guild.name)
-
         createGuild(guild)
 
-        deployCommands(process.env.clientID, guild.id, "EN", true)
+        const result = await deployCommands(process.env.clientID, guild.id, "EN", true)
+        if (result)
+            console.log("")
     }
 }

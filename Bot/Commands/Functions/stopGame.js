@@ -2,6 +2,8 @@ const { getChannel, getActiveChannels, deactivateChannel } = require("../../Serv
 const getEmojis  = require("../../_helpers/getEmojis");
 const { getConfirmationButton } = require(".././Buttons/ConfirmationButton");
 
+
+// TODO fix this
 async function stopGame (interaction, buttonDuration, language) {
 
     const emojis = await getEmojis(interaction.client);

@@ -1,4 +1,3 @@
-
 async function ping (interaction, language) {
     const languages = {
         TR: {

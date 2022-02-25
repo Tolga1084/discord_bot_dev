@@ -7,8 +7,8 @@ module.exports = {
 		.setName('başlat')
 		.setDescription('Bu kanalda bir oyun başlatır.')
 		.addSubcommand(subcommand =>
-			subcommand.setName('word_chain')
-				.setDescription('"Word Chain" oyununu başlatır')
+			subcommand.setName('kelime_zinciri')
+				.setDescription('"Kelime Zinciri" oyununu başlatır')
 				.addStringOption(option =>
 					option.setName('sözlük')
 						.setDescription('Referans sözlük seçer')

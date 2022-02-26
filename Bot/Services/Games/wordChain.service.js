@@ -20,7 +20,7 @@ async function wordChainModel ({dict, wordLimit, startingLetter}) {
 }
 
 const victoryTypes = {
-    Classic: {score: 100}
+    classic: {score: 100}
 }
 
 const wordLimitRange = {
@@ -41,7 +41,7 @@ async function createWordChainGame({ channelId, dict, wordLimit, startingLetter}
             {_id: channelId},
             {$set: update })
 
-        console.log("createWordChainGame " + JSON.stringify(channelQuery));
+        console.log("startWordChainGame " + JSON.stringify(channelQuery));
 
         const collation = {
             collation: {
@@ -80,7 +80,9 @@ async function getWordChainGame(channelID, word){
                             remainingWordLimit: 1,
                             wordLimit: 1,
                             startingLetter: 1,
-                            lastAnswerer:1 }}
+                            lastAnswerer:1
+                            }
+                        }
 
     let query = {_id: channelID}
     const options = { projection }

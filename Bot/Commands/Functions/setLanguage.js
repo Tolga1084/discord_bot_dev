@@ -18,7 +18,7 @@ async function setLanguage (interaction, language) {
         },
         EN: {
             subCommand_language: "language",
-            success: "I now speak English! Commands are in English too!" + flagEN,
+            success: "I now speak English! Commands are in English too! " + flagEN,
             repeated: "I already speak English! " + flagEN,
             failure: "Something went wrong!" + `${emojis.HC_fine}`
         }

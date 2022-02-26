@@ -10,8 +10,8 @@ module.exports = {
 
         // process guild registers and removes
         try {
-            await client.guilds.fetch();
-            await syncGuilds(client);
+            //await client.guilds.fetch();
+            //await syncGuilds(client);
 
         }catch (err){
             console.log("ready.js sync "+ err);
@@ -20,5 +20,6 @@ module.exports = {
         // make emojis available in the cache
         const emojiGuild = client.guilds.cache.get(emojiGuildID)
         await emojiGuild.emojis.fetch();
+
     }
 };

@@ -62,12 +62,12 @@ async function getActiveChannels(guildID){
 
     try {
         const channelQuery = await mongoClient.db(db).collection("channels").find(
-            {guild: guildID, isActive: true},
+            {guildID: guildID, isActive: true},
             {options: { sort: { name: 1 }, projection: { isActive: 1, activeGame: 1 }}})
 
         console.log("getActiveChannels: " + JSON.stringify(await channelQuery));
 
-        return await channelQuery;
+        return channelQuery;
 
     }catch (error) {
         if (error instanceof MongoServerError) {

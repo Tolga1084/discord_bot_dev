@@ -1,5 +1,6 @@
 const getEmojis = require("../_helpers/getEmojis");
 const dictQuery = require("../Services/dictionary.service");
+const {randomStartingLetterTR, loadAnimation} = require("../_helpers/util");
 const { registerUser } = require("../Services/users.service");
 const { getWordChainGame, updateWordChainGame, updatePlayerStat, createWordChainGame, victoryTypes } = require("../Services/Games/wordChain.service");
 const { isOneLine, isLetter, isOneWord, checkStartingLetter, sendThenDelete, replyThenDelete } = require("../_helpers/util");
@@ -15,8 +16,8 @@ const meta = {
     gameType: "Classic",
     isCleanMessaging: true
 }
-
-async function wordGame (message){
+// TODO FAST MODE
+async function wordGame (message, language){
 
     // register user
     const register_promise = registerUser(message.author.id, message.author.username)
@@ -24,10 +25,49 @@ async function wordGame (message){
     // get emojis
     const emojis = await getEmojis(message.client);
 
+    const languages = {
+        TR: {
+            alreadyUsed: "Bu kelime zaten kullanıldı! "  + `${emojis.altarSopali}`,
+            prematureEnd_1A: "oyunun bitebilmesi için en az  **",
+            prematureEnd_1B: "**  kelime daha gerekli!" + `${emojis.altarSopali}`,
+            prematureEnd_1C: "**  kelime daha gerekli!" + `${emojis.altarSopali}`,
+            victory: "Oyunu bitirdin ! " + `${emojis.cemismont}`,
+            restart: "Yeniden başlatılıyor.",
+            isOneLine: 'Tek satır neyine yetmiyor!' + `${emojis.altarSopali}`,
+            isLetter: 'Sadece harf kullanabilirsin!' + `${emojis.altarSopali}`,
+            isOneWord: 'Sadece tek kelime kullanabilirsin!' + `${emojis.altarSopali}`,
+            isLastAnswerer: 'Sen sıranı savdın!' + `${emojis.altarSopali}`,
+            checkStartingLetter_1A: 'başlangıç harfi ',
+            checkStartingLetter_1B: `${emojis.altarSopali}`,
+            remindStartingLetter_1A: 'başlangıç harfi ',
+            remindStartingLetter_1B: `${emojis.altar}`
+        },
+
+        EN: {
+            alreadyUsed: "That word has already been used ! "  + `${emojis.altarSopali}`,
+            prematureEnd_1A: "There need to be at least  **",
+            prematureEnd_1B: "**  more words submitted before the game can end!" + `${emojis.altarSopali}`,
+            prematureEnd_1C: "**  more word submitted before the game can end!" + `${emojis.altarSopali}`,
+            victory: "You have ended the game! " + `${emojis.cemismont}`,
+            restart: "Restarting.",
+            isOneLine: 'Multiple lines are not permitted!' + `${emojis.altarSopali}`,
+            isLetter: 'Only letters are allowed!' + `${emojis.altarSopali}`,
+            isOneWord: 'Multiple words are not allowed!' + `${emojis.altarSopali}`,
+            isLastAnswerer: 'Your turn is over!' + `${emojis.altarSopali}`,
+            checkStartingLetter_1A: 'The starting letter is ',
+            checkStartingLetter_1B: `${emojis.altarSopali}`,
+            remindStartingLetter_1A: 'The starting letter is ',
+            remindStartingLetter_1B: `${emojis.altar}`
+
+        }
+    }
+
+    const L = languages[language.toUpperCase()];
+
     // validate the word
     const word = message.content.toString().toLocaleLowerCase("tr-TR");
 
-    if(!await isWordValid(message, word, emojis)) return false;
+    if(!await isWordValid(message, word, emojis, L)) return false;
 
     // check startingLetter and lastAnswerer
     let t0 = performance.now();
@@ -38,7 +78,7 @@ async function wordGame (message){
     console.log("getWordChainGame " + inspect(wordChain, inspectOptions));
 
     // check the wordChain
-    if(!await isWordChainValid(message, word, message.author.id, wordChain.game.lastAnswerer, wordChain.game.startingLetter, emojis)) return;
+    if(!await isWordChainValid(message, word, message.author.id, wordChain.game.lastAnswerer, wordChain.game.startingLetter, emojis, L)) return;
 
     // check if the word exists in the dictionary
     t0 = performance.now();
@@ -61,8 +101,7 @@ async function wordGame (message){
 
     if (wordChain.isUsed) {
 
-        let reply = 'bu kelime zaten kullanıldı!' + `${emojis.altarSopali}`
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message, L.alreadyUsed, meta.isCleanMessaging)
         console.log("\nAlready used!")
         return false;
     }
@@ -75,8 +114,8 @@ async function wordGame (message){
             winFlag = true
         }
         else {
-            let reply = "oyunun bitebilmesi için en az " + (wordChain.game.remainingWordLimit) + " kelime daha gerekli !" + `${emojis.altarSopali}`
-            replyThenDelete(message,reply,meta.isCleanMessaging)
+            let reply = L.prematureEnd_1A + (wordChain.game.remainingWordLimit) + (wordChain.game.remainingWordLimit > 1 ? L.prematureEnd_1B : L.prematureEnd_1C)
+            replyThenDelete(message,reply,meta.isCleanMessaging, 7000)
             return false;
         }
     }
@@ -99,23 +138,39 @@ async function wordGame (message){
 
     if (winFlag) {
         // award victory points
-        playerUpdate.points += victoryTypes.Classic
+        playerUpdate.points += victoryTypes.classic.score
         playerUpdate.victoryType = meta.gameType
 
         console.log("\nGAME OVER")
 
-        await message.reply("Oyunu bitirdin ! " + `${emojis.cemismont}`)
-        await message.channel.send(`${emojis.CS_dance}`)
+        // RESET
+        const nextGame = {
+            channelId: message.channelId,
+            dict: wordChain.game.dict,
+            wordLimit: wordChain.game.wordLimit,
+            startingLetter: randomStartingLetterTR()
+        }
 
-        //reset game
-        await message.reply("Yeniden Başlatılıyor !")
+        createWordChainGame(nextGame)
 
-        createWordChainGame(message.channelId, wordChain.game.dict, wordChain.game.wordLimit )
+        console.log( inspect(nextGame, inspectOptions) )
+
+        languages.TR.startNotification = "KELİME ZİNCİRİ BAŞLADI!" + "\n\nSözlük: " + nextGame.dict + "\nMinimum kelime limiti: " + nextGame.wordLimit + "\n\n***Başlangıç harfi: " + nextGame.startingLetter + "***";
+        languages.EN.startNotification = "WORD CHAIN HAS STARTED!" + "\n\nDictionary: " + nextGame.dict + "\nMin word limit: " + nextGame.wordLimit + "\n\n***Starting Letter: " + nextGame.startingLetter + "***";
+
+        await message.reply(L.victory)
+        await message.channel.send(`${emojis.CS_dance}` )
+
+        const loadingMessage = await loadAnimation(message.channel, ".", 3, 1000, L.restart)
+
+        await message.channel.send(`${emojis.ebu_leheb}`)
+        await message.channel.send(L.startNotification)
 
     }
 
     await register_promise
     updatePlayerStat(message.guildId, playerUpdate)
+    console.log( inspect(playerUpdate, inspectOptions) )
 
     if(winFlag) return "reset";
 
@@ -132,26 +187,25 @@ async function wordGame (message){
     }
 
     updateWordChainGame(message.channelId, wordChainUpdate)
+    console.log( inspect(wordChainUpdate, inspectOptions) )
 
     return wordChainUpdate
 
 }
 
-async function isWordValid (message, word, emojis) {
+async function isWordValid (message, word, emojis, L) {
 
     let reply
     if (!isOneLine(word)) {
 
-        reply = 'Tek satır neyine yetmiyor!' + `${emojis.altarSopali}`
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message, L.isOneLine, meta.isCleanMessaging)
 
         return false;
     }
 
     if (!isLetter(word)) {
 
-        reply = 'Sadece harf kullanabilirsin!' + `${emojis.altarSopali}`
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message, L.isLetter, meta.isCleanMessaging)
 
         return false;
     }
@@ -159,29 +213,27 @@ async function isWordValid (message, word, emojis) {
     if (!isOneWord(word)) {
 
 
-        reply= 'Sadece tek kelime kullanabilirsin!' + `${emojis.altarSopali}`
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message, L.isOneWord, meta.isCleanMessaging)
 
         return false
     }
     return true
 }
 
-async function isWordChainValid (message, word, playerID, lastAnswerer, startingLetter, emojis) {
+async function isWordChainValid (message, word, playerID, lastAnswerer, startingLetter, emojis, L) {
 
     // TODO temporarily disabled  -playerID should be object
     let reply
     if (lastAnswerer === "playerID") {
 
-        reply = 'Sen sıranı savdın!' + `${emojis.altarSopali}`
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message, L.lastAnswerer, meta.isCleanMessaging)
 
         return false
     }
 
     if (!checkStartingLetter(word, startingLetter)) {
 
-        reply = 'başlangıç harfi ' + `**${startingLetter.toLocaleUpperCase("tr-TR")}**` + `${emojis.altarSopali}`
+        reply = L.checkStartingLetter_1A + `**${startingLetter.toLocaleUpperCase("tr-TR")}**` + L.checkStartingLetter_1B
         replyThenDelete(message,reply,meta.isCleanMessaging)
 
         return false
@@ -189,10 +241,10 @@ async function isWordChainValid (message, word, playerID, lastAnswerer, starting
     return true
 }
 
-async function remindStartingLetter(startingLetter, channel, emojis) {
+async function remindStartingLetter(startingLetter, channel, emojis, L) {
 
     channel.send({
-        content: 'başlangıç harfi ' + `**${startingLetter.toLocaleUpperCase("tr-TR")}**  ${emojis.altar}`
+        content: L.remindStartingLetter
     })
 }
 

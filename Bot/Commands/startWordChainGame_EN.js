@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const startWordChainGame = require("./Functions/createWordChainGame");
+const startWordChainGame = require("./Functions/startWordChainGame");
 
 module.exports = {
 
@@ -14,6 +14,10 @@ module.exports = {
 						.setDescription('Selects a dictionary for reference.')
 						.setRequired(true)
 						.addChoice('TR', 'TR'))
+				.addIntegerOption(option =>
+					option.setName('deletion_delay')
+						.setDescription('seconds before invalid answers/bot replies are deleted ("0" enables fast mode)')
+						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('min_word_limit')
 						.setDescription('Min word count before the game can end.')

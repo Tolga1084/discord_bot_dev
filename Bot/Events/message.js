@@ -1,3 +1,4 @@
+const {getGuild} = require("../Services/guild.service");
 const { wordGame, wordChainResultCodes } = require("../Games/wordGame.js")
 const { getChannel, gameEnum } = require("../Services/channel.service.js");
 const { inspect } = require('util');
@@ -37,6 +38,9 @@ module.exports = {
             return;
         }
 
+        // get guild interface language
+        const {interfaceLanguage: language} = await getGuild(message.guildId)
+
         // TODO threaded process for each game
         // WORD CHAIN
         if (channelQuery.activeGame === gameEnum.wordChain) {
@@ -46,12 +50,12 @@ module.exports = {
             if (!wordGameQueue[channelId]) {
 
                 wordGameQueue[channelId] = []
-                initiateWordChainQueue(channelId, message);
+                initiateWordChainQueue(channelId, message, language);
             }
 
             else if (wordGameQueue[channelId].length === 0) {
 
-                initiateWordChainQueue(channelId, message);
+                initiateWordChainQueue(channelId, message, language);
             }
             else {
                 insertChronologically(wordGameQueue[channelId], message)
@@ -63,7 +67,7 @@ module.exports = {
     }
 }
 
-async function processWordGameQueue(channelId) {
+async function processWordGameQueue(channelId, language) {
 
     console.log("\nprocessing Word Chain Queue...")
     while (wordGameQueue[channelId].length > 0) {
@@ -74,7 +78,7 @@ async function processWordGameQueue(channelId) {
         console.log("\n------ processing next message: '" + nextMessage.content +  "' ------" )
 
         let t0 = performance.now()
-        const wordGameResult = await wordGame(nextMessage)
+        const wordGameResult = await wordGame(nextMessage, language)
         let t1 = performance.now()
         console.log("\nwordGame performance: " + (t1 - t0) + " ms");
 
@@ -86,14 +90,14 @@ async function processWordGameQueue(channelId) {
     console.log("\nWord Chain Queue completed ! ")
 }
 
-function initiateWordChainQueue(channelId, message) {
+function initiateWordChainQueue(channelId, message, language) {
 
     console.log("\ninitiating Word Chain Queue...")
     wordGameQueue[channelId].push(message)
     console.log("\tqueued " + message.content)
     console.log("\tqueued words: "+ inspect(wordGameQueue[channelId].map(message =>  ({content: message.content, createdTimestamp: message.createdTimestamp})), inspectOptions))
 
-    processWordGameQueue(channelId)
+    processWordGameQueue(channelId, language)
 }
 
 //insert into the sorted queue according to the timestamp

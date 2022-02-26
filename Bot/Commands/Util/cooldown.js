@@ -1,5 +1,5 @@
 // user, channel and command specific cooldown
-
+// TODO calm down meme
 function cooldown (interaction, commandName, set, cooldown, language) {
     const id = (interaction.user.id + commandName + interaction.channelId)
 

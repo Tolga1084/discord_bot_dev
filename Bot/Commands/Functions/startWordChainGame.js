@@ -22,6 +22,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
         TR: {
             subCommand_dictionary: "sözlük",
             subCommand_min_word_limit: "min_kelime_limiti",
+            subCommand_deletion_delay: "silme_süresi",
             content_1A: `		 ***DİKKAT***		` + "\nBu kanalda zaten oyun oynanıyor!",
             content_1B: "Yeni bir oyun başlatırsan, bu oyunu sonlandırmış olacaksın! Devam etmek istiyorsan **'BAŞLAT'** tuşuna bas" + `${emojis.altar}`,
             wordChain: "Kelime Zinciri"
@@ -30,6 +31,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
         EN: {
             subCommand_dictionary: "dictionary",
             subCommand_min_word_limit: "min_word_limit",
+            subCommand_deletion_delay: "deletion_delay",
             content_1A: `		 ***WARNING***		` + "\nThere is already an active game on this channel!",
             content_1B: "\nStarting a new game will terminate it. Press the **'START'** button, if you wish to proceed." + `${emojis.altar}`,
             wordChain: "Word Chain"
@@ -41,6 +43,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
     const channel = await getChannel(interaction.channelId)
     const dict = interaction.options.getString(L.subCommand_dictionary)
     const wordLimit = interaction.options.getInteger(L.subCommand_min_word_limit)
+    const deletion_delay = interaction.options.getString(deletion_delay)
     const startingLetter = randomStartingLetterTR()
 
     console.log("DICT            => " + dict + "\n" +
@@ -54,6 +57,13 @@ async function startWordChainGame (interaction, buttonDuration, language){
         interaction.reply({
             content: L.wordLimitError
             })
+        throw "wordLimit out of Range ! " + inspect(wordLimitRange, inspectOptions)
+    }
+
+    if ( (wordLimit < wordLimitRange.min) || (wordLimit > wordLimitRange.max) ) {
+        interaction.reply({
+            content: L.wordLimitError
+        })
         throw "wordLimit out of Range ! " + inspect(wordLimitRange, inspectOptions)
     }
 

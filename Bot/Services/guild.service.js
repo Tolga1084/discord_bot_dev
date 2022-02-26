@@ -253,9 +253,10 @@ async function getGuild(guildID){
     const mongoClient = await getMongoClient();
 
     const query = {_id: guildID}
+    const projection = {games: 0}
 
     try {
-        return await mongoClient.db(db).collection("guilds").findOne(query);
+        return await mongoClient.db(db).collection("guilds").findOne(query, projection);
 
     }catch (error) {
         if (error instanceof MongoServerError) {

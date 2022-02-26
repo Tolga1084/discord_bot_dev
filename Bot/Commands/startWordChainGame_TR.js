@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const startWordChainGame = require("./Functions/createWordChainGame");
+const startWordChainGame = require("./Functions/startWordChainGame");
 
 module.exports = {
 
@@ -14,6 +14,10 @@ module.exports = {
 						.setDescription('Referans sözlük seçer')
 						.setRequired(true)
 						.addChoice('TR', 'TR'))
+				.addIntegerOption(option =>
+					option.setName('silme_süresi')
+						.setDescription('yanlış cevapların/bot mesajlarının silinmesi için geçen saniye ("0" hızlı modu açar)')
+						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('min_kelime_limiti')
 						.setDescription('Oyunun bitmesi için gerekli asgari kelime sayısı. (min: 10, max:1000)')

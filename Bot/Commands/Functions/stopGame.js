@@ -3,7 +3,6 @@ const getEmojis  = require("../../_helpers/getEmojis");
 const { getConfirmationButton } = require(".././Buttons/ConfirmationButton");
 
 
-// TODO fix this
 async function stopGame (interaction, buttonDuration, language) {
 
     const emojis = await getEmojis(interaction.client);
@@ -14,20 +13,20 @@ async function stopGame (interaction, buttonDuration, language) {
             subCommand_here: "bu_kanalda",
             subCommand_all: "her_kanalda",
             terminateNotification_1: "Oyun bitti! Dağılın!",
-            noGamesFound_1: "Bu kanalda oyun moyun yok zaten!",
+            noGamesFound_1: "Bu kanalda oyun falan yok zaten!",
             confirmation_1: "Bu oyunları sonlandırayım mı?",
-            terminateNotification_2: "Bu kanaldaki oyun, " + `${interaction.author}` + "tarafından sonlandırıldı.\nHadi evlerinize dağılın.",
+            terminateNotification_2: "Bu kanaldaki oyun, " + `${interaction.user.tag}` + "tarafından sonlandırıldı.\nHadi evlerinize dağılın.",
             terminateNotification_3: "Oyunlar sonlandırıldı!",
-            noGamesFound2: "Oyun falan yok hiçbir yerde."
+            noGamesFound2: "Oyun falan yok hiçbir yerde!"
         },
 
         EN: {
             subCommand_here: "here",
-            subCommand_all: "all",
+            subCommand_all: "everywhere",
             terminateNotification_1: "The game has been terminated!",
             noGamesFound_1: "There is currently no active session on this channel!",
             confirmation_1: "Would you like to terminate the games in these channels?",
-            terminateNotification_2: "The game on this channel has been terminated by " + `${interaction.author}` + "\nHadi evlerinize dağılın.",
+            terminateNotification_2: "The game on this channel has been terminated by " + `${interaction.user.tag}` + "\nDisperse immediately.",
             terminateNotification_3: "The games have been stopped!",
             noGamesFound2: "There are no active sessions on any channel!"
         }
@@ -78,15 +77,16 @@ async function stopGame (interaction, buttonDuration, language) {
                 const collectorFunction = function () {
                     // TODO implement bulkwrite method?
                     activeChannels.forEach(channel => {
-                        deactivateChannel(channel.id);
-                        channel.send(L.terminateNotification_2).then(() => { //TODO disable mention notifications
-                            channel.send(`${emojis.terminator}`)
+                        deactivateChannel(channel._id);
+                        interaction.client.channels.fetch(channel._id)
+                        interaction.client.channels.cache.get(channel._id).send(L.terminateNotification_2).then(() => { //TODO disable mention notifications
+                        interaction.client.channels.cache.get(channel._id).send(`${emojis.terminator}`)
                         })
                     })
                 }
 
                 const update = L.terminateNotification_3 + ` ${emojis.altar}`;
-                const row = await getConfirmationButton(interaction, 'STOP', 'DANGER', buttonDuration, collectorFunction, update);
+                const row = await getConfirmationButton(interaction, 'STOP', 'DANGER', buttonDuration, collectorFunction, update, language);
                 console.log("stopGame forEach message: " + message);
                 await interaction.reply({content: message, components: [row]});
             }

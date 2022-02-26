@@ -66,7 +66,7 @@
 }*/
 
  function randomStartingLetterTR () {
-    let turkceKarakterler = 'ABCÇDEFGHIİJKLMNOÖPRSŞTUÜVYZ'
+    let turkceKarakterler = 'ABCÇDEFGHIİJKLMNOÖPRSŞTUÜVYZ' // Ğ is excluded
     return turkceKarakterler[(Math.floor(Math.random() * turkceKarakterler.length))];
 }
 
@@ -93,11 +93,12 @@ function getKeyByValue(object, value) {
          if (msg)
          setTimeout(() => msg.delete(), duration)
          else setTimeout(() => message.deleteReply(), duration)
+
+         if(deleteMessage) {
+             if (!message.isInteraction) setTimeout(() => message.delete(), duration)
+             else throw "interaction cannot be deleted!"
+         }
      })
-     if(deleteMessage) {
-         if (!message.isInteraction) setTimeout(() => message.delete(), duration)
-         else throw "interaction cannot be deleted!"
-     }
 
  }
 
@@ -108,6 +109,24 @@ function getKeyByValue(object, value) {
      setTimeout(() => message.delete(), duration)
 
  }
+ function sleep(millis) {
+     return new Promise(resolve => setTimeout(resolve, millis));
+ }
+async function loadAnimation (channel, char, count, delay, message = "\n" + char) {
+
+    const loadingIndicator = await channel.send(message)
+
+    for (let i = 0; i < count; i++) {
+            await sleep(delay)
+            char += "."
+            loadingIndicator.edit(message + char)
+    }
+    console.log(delay*count)
+    return loadingIndicator
+
+}
 
 
-module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff, getKeyByValue, replyThenDelete, sendThenDelete}
+
+
+module.exports = {isLetter, isOneWord, isOneLine, checkStartingLetter, isNumeric, randomStartingLetterTR, ms, arrDiff, getKeyByValue, replyThenDelete, loadAnimation}

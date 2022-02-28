@@ -16,7 +16,7 @@ module.exports = {
 						.addChoice('TR', 'TR'))
 				.addIntegerOption(option =>
 					option.setName('deletion_delay')
-						.setDescription('seconds before invalid answers/bot replies are deleted ("0" enables fast mode)')
+						.setDescription('seconds before messages are deleted ("0" disables bot replies, "30" disables deleting)')
 						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('min_word_limit')

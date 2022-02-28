@@ -16,7 +16,7 @@ module.exports = {
 						.addChoice('TR', 'TR'))
 				.addIntegerOption(option =>
 					option.setName('silme_süresi')
-						.setDescription('yanlış cevapların/bot mesajlarının silinmesi için geçen saniye ("0" hızlı modu açar)')
+						.setDescription('mesajların silinmesi için geçen saniye ("0" bot tepkilerini kapatır, "30" silmeyi kapatır)')
 						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('min_kelime_limiti')
@@ -26,7 +26,7 @@ module.exports = {
 
 	execute: async function (interaction, buttonDuration) {
 
-		if( await interaction.options.getSubcommand() === "word_chain")
+		if( await interaction.options.getSubcommand() === "kelime_zinciri")
 		await startWordChainGame(interaction, buttonDuration, "TR")
 	}
 }

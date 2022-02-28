@@ -67,18 +67,24 @@ async function wordGame (message, language){
     // validate the word
     const word = message.content.toString().toLocaleLowerCase("tr-TR");
 
-    if(!await isWordValid(message, word, emojis, L)) return false;
-
     // check startingLetter and lastAnswerer
     let t0 = performance.now();
     const wordChain = await getWordChainGame(message.channelId, word)
     let t1 = performance.now();
 
+    if(!await isWordValid(message, word, emojis, L, wordChain.game.deletionDelay)) {
+        message.react('❌')
+        return false;
+    }
+
     console.log("\ngetWordChainGame done in " + (t1 - t0) + " milliseconds.");
     console.log("getWordChainGame " + inspect(wordChain, inspectOptions));
 
     // check the wordChain
-    if(!await isWordChainValid(message, word, message.author.id, wordChain.game.lastAnswerer, wordChain.game.startingLetter, emojis, L)) return;
+    if(!await isWordChainValid(message, word, message.author.id, wordChain.game.lastAnswerer, wordChain.game.startingLetter, emojis, L, wordChain.game.deletionDelay)) {
+        message.react('❌')
+        return false
+    }
 
     // check if the word exists in the dictionary
     t0 = performance.now();
@@ -88,9 +94,10 @@ async function wordGame (message, language){
     console.log("\nwordQuery done in " + (t1 - t0) + " milliseconds.");
 
     if (wordQuery === null) {
+
         message.react('❌')
         let reply = `${emojis.taam}`
-        replyThenDelete(message, reply, meta.isCleanMessaging)
+        replyThenDelete(message, reply, meta.isCleanMessaging, wordChain.game.deletionDelay)
         //await remindStartingLetter(wordChain.game.startingLetter, message.channel, emojis);
         console.log("Word does not exist in the dictionary => " + wordChain.game.dict)
         return false;
@@ -100,8 +107,8 @@ async function wordGame (message, language){
     const dictWord = wordQuery.madde.toString().toLocaleLowerCase("tr-TR");
 
     if (wordChain.isUsed) {
-
-        replyThenDelete(message, L.alreadyUsed, meta.isCleanMessaging)
+        message.react('❌')
+        replyThenDelete(message, L.alreadyUsed, meta.isCleanMessaging, wordChain.game.deletionDelay)
         console.log("\nAlready used!")
         return false;
     }
@@ -114,8 +121,9 @@ async function wordGame (message, language){
             winFlag = true
         }
         else {
+            message.react('❌')
             let reply = L.prematureEnd_1A + (wordChain.game.remainingWordLimit) + (wordChain.game.remainingWordLimit > 1 ? L.prematureEnd_1B : L.prematureEnd_1C)
-            replyThenDelete(message,reply,meta.isCleanMessaging, 7000)
+            replyThenDelete(message,reply,meta.isCleanMessaging, wordChain.game.deletionDelay)
             return false;
         }
     }
@@ -123,9 +131,9 @@ async function wordGame (message, language){
     // SUCCESS
     message.react('✅')
     let points = dictWord.length
-    if (dictWord.length > 7 && dictWord.length < 11) {message.react(emojis.cemismont); points += 5}
-    if (dictWord.length > 12) {message.react(emojis.ebu_leheb); points += 8}
-    if (dictWord.length > 17) {message.react(emojis.terminator); points += 15}
+    if (dictWord.length > 7 ) {message.react(emojis.cemismont); points += 5}
+    if (dictWord.length > 11) {message.react(emojis.ebu_leheb); points += 8}
+    if (dictWord.length > 14) {message.react(emojis.terminator); points += 15}
 
     console.log("\nwordQuery madde " + dictWord + "\nwordQuery ID " + wordQuery._id)
 
@@ -193,19 +201,19 @@ async function wordGame (message, language){
 
 }
 
-async function isWordValid (message, word, emojis, L) {
+async function isWordValid (message, word, emojis, L, deletionDelay) {
 
     let reply
     if (!isOneLine(word)) {
 
-        replyThenDelete(message, L.isOneLine, meta.isCleanMessaging)
+        replyThenDelete(message, L.isOneLine, meta.isCleanMessaging, deletionDelay)
 
         return false;
     }
 
     if (!isLetter(word)) {
 
-        replyThenDelete(message, L.isLetter, meta.isCleanMessaging)
+        replyThenDelete(message, L.isLetter, meta.isCleanMessaging, deletionDelay)
 
         return false;
     }
@@ -213,35 +221,35 @@ async function isWordValid (message, word, emojis, L) {
     if (!isOneWord(word)) {
 
 
-        replyThenDelete(message, L.isOneWord, meta.isCleanMessaging)
+        replyThenDelete(message, L.isOneWord, meta.isCleanMessaging, deletionDelay)
 
         return false
     }
     return true
 }
 
-async function isWordChainValid (message, word, playerID, lastAnswerer, startingLetter, emojis, L) {
+async function isWordChainValid (message, word, playerID, lastAnswerer, startingLetter, emojis, L, deletionDelay) {
 
     // TODO temporarily disabled  -playerID should be object
     let reply
-    if (lastAnswerer === "playerID") {
+    if (lastAnswerer === playerID) {
 
-        replyThenDelete(message, L.lastAnswerer, meta.isCleanMessaging)
+        replyThenDelete(message, L.isLastAnswerer, meta.isCleanMessaging, deletionDelay)
 
         return false
     }
 
-    if (!checkStartingLetter(word, startingLetter)) {
+    if (!checkStartingLetter(word, startingLetter, deletionDelay)) {
 
         reply = L.checkStartingLetter_1A + `**${startingLetter.toLocaleUpperCase("tr-TR")}**` + L.checkStartingLetter_1B
-        replyThenDelete(message,reply,meta.isCleanMessaging)
+        replyThenDelete(message,reply,meta.isCleanMessaging, deletionDelay)
 
         return false
     }
     return true
 }
 
-async function remindStartingLetter(startingLetter, channel, emojis, L) {
+async function remindStartingLetter(startingLetter, channel, emojis, L, deletionDelay) {
 
     channel.send({
         content: L.remindStartingLetter

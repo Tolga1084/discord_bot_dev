@@ -1,7 +1,7 @@
 const { randomStartingLetterTR, getKeyByValue } = require("../../_helpers/util");
 const { getConfirmationButton } = require("../Buttons/ConfirmationButton");
 const { getChannel,  gameEnum, createChannel } = require("../../Services/channel.service");
-const { createWordChainGame, wordLimitRange } = require("../../Services/Games/wordChain.service")
+const { createWordChainGame, requirements } = require("../../Services/Games/wordChain.service")
 const getEmojis = require("../../_helpers/getEmojis");
 const { inspect } = require('util');
 
@@ -25,7 +25,8 @@ async function startWordChainGame (interaction, buttonDuration, language){
             subCommand_deletion_delay: "silme_süresi",
             content_1A: `		 ***DİKKAT***		` + "\nBu kanalda zaten oyun oynanıyor!",
             content_1B: "Yeni bir oyun başlatırsan, bu oyunu sonlandırmış olacaksın! Devam etmek istiyorsan **'BAŞLAT'** tuşuna bas" + `${emojis.altar}`,
-            wordChain: "Kelime Zinciri"
+            wordChain: "Kelime Zinciri",
+            button_start: "BAŞLAT"
         },
 
         EN: {
@@ -34,7 +35,8 @@ async function startWordChainGame (interaction, buttonDuration, language){
             subCommand_deletion_delay: "deletion_delay",
             content_1A: `		 ***WARNING***		` + "\nThere is already an active game on this channel!",
             content_1B: "\nStarting a new game will terminate it. Press the **'START'** button, if you wish to proceed." + `${emojis.altar}`,
-            wordChain: "Word Chain"
+            wordChain: "Word Chain",
+            button_start: "START"
         }
     }
 
@@ -43,28 +45,32 @@ async function startWordChainGame (interaction, buttonDuration, language){
     const channel = await getChannel(interaction.channelId)
     const dict = interaction.options.getString(L.subCommand_dictionary)
     const wordLimit = interaction.options.getInteger(L.subCommand_min_word_limit)
-    const deletion_delay = interaction.options.getString(deletion_delay)
+    const deletionDelayInput = interaction.options.getInteger(L.subCommand_deletion_delay)
     const startingLetter = randomStartingLetterTR()
 
     console.log("DICT            => " + dict + "\n" +
                 "WORD_LIMIT      => " + wordLimit + "\n" +
-                "STARTING_LETTER => " + startingLetter + "\n\n")
+                "STARTING_LETTER => " + startingLetter + "\n" +
+                "DELETION_DELAY  => " + deletionDelayInput + "\n\n")
 
     languages.TR.wordLimitError = "Kelime limiti, 10 ila 1000 arasında olmalı ! "  + `${emojis.altarSopali}`;
     languages.EN.wordLimitError = "Word limit has to be between 10 and 1000 ! "  + `${emojis.altarSopali}`;
 
-    if ( (wordLimit < wordLimitRange.min) || (wordLimit > wordLimitRange.max) ) {
+    languages.TR.deletionDelayError = "Silme süresi, 0 ila 30 arasında olmalı ! "  + `${emojis.altarSopali}`;
+    languages.EN.deletionDelayError = "Deletion delay has to be between 0 and 30 ! "  + `${emojis.altarSopali}`;
+
+    if ( (wordLimit < requirements.wordLimitRange.min) || (wordLimit > requirements.wordLimitRange.max) ) {
         interaction.reply({
             content: L.wordLimitError
             })
-        throw "wordLimit out of Range ! " + inspect(wordLimitRange, inspectOptions)
+        throw "wordLimit out of Range ! " + inspect(requirements.wordLimitRange, inspectOptions)
     }
 
-    if ( (wordLimit < wordLimitRange.min) || (wordLimit > wordLimitRange.max) ) {
+    if ( (deletionDelayInput < requirements.deletionDelay.min) || (deletionDelayInput > requirements.deletionDelay.max) ) {
         interaction.reply({
-            content: L.wordLimitError
+            content: L.deletionDelayError
         })
-        throw "wordLimit out of Range ! " + inspect(wordLimitRange, inspectOptions)
+        throw "deletionDelay out of Range ! " + inspect(deletionDelayInput, inspectOptions)
     }
 
     languages.TR.startNotification = "KELİME ZİNCİRİ BAŞLADI!"+ "\n\nSözlük: " + dict + "\nMinimum kelime limiti: " + wordLimit + "\n\n***Başlangıç harfi:*** " + "***" + startingLetter + "***";
@@ -76,7 +82,8 @@ async function startWordChainGame (interaction, buttonDuration, language){
         channelId: interaction.channelId,
         dict,
         wordLimit,
-        startingLetter
+        startingLetter,
+        deletionDelay: deletionDelayInput * 1000  // convert ms to second
     }
 
     const start = function () {
@@ -91,7 +98,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
     if (channel) {
         if (channel.isActive) {
 
-            const row = await getConfirmationButton(interaction, "START", "DANGER", buttonDuration, start, L.startNotification, language)
+            const row = await getConfirmationButton(interaction, L.button_start, "DANGER", buttonDuration, start, L.startNotification, language)
 
             await interaction.reply({
                 content: L.content_1A + " - **" + L[getKeyByValue(gameEnum, channel.activeGame)] + "** -\n" + L.content_1B,

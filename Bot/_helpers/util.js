@@ -86,23 +86,32 @@ function getKeyByValue(object, value) {
      return Object.keys(object).find(key => object[key] === value);
  }
 
- async function replyThenDelete (message, reply, deleteMessage= false, duration = 5000){
-     message.reply({
-         content: reply
-     }).then(msg => {
-         if (msg)
-         setTimeout(() => msg.delete(), duration)
-         else setTimeout(() => message.deleteReply(), duration)
+ async function replyThenDelete (message, reply, deleteMessage= false, deletionDelay = 5000){
+     try {
+         let botReply = false
+         if (deletionDelay !== 0) {
+             botReply = await message.reply({
+                 content: reply
+             })
+         }
 
-         if(deleteMessage) {
-             if (!message.isInteraction) setTimeout(() => message.delete(), duration)
+         if (deletionDelay === 30000) return
+
+         if (deleteMessage) {
+             if (!message.isInteraction) setTimeout(() => message.delete(), deletionDelay)
              else throw "interaction cannot be deleted!"
          }
-     })
 
+         if (botReply) {
+             setTimeout(() => botReply.delete(), deletionDelay)
+         } else if (message.isInteraction)
+             setTimeout(() => message.deleteReply(), deletionDelay)
+     } catch (err) {
+         console.log("replyThenDelete " + err + "\ndeletionDelay: " + deletionDelay)
+     }
  }
 
- async function sendThenDelete (message, reply, duration = 5000){
+ async function sendThenDelete (message, reply, deletionDelay = 5000){
      await message.channel.send({
          content: reply
      })

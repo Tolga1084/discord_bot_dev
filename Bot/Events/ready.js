@@ -10,8 +10,8 @@ module.exports = {
 
         // process guild registers and removes
         try {
-            //await client.guilds.fetch();
-            //await syncGuilds(client);
+            await client.guilds.fetch();
+            await syncGuilds(client);
 
         }catch (err){
             console.log("ready.js sync "+ err);

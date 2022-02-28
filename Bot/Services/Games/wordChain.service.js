@@ -4,7 +4,7 @@ const getMongoClient = require("../../_helpers/getMongoClient.js")
 const { randomStartingLetterTR } = require("../../_helpers/util");
 const { gameEnum } = require("../channel.service");
 
-async function wordChainModel ({dict, wordLimit, startingLetter}) {
+async function wordChainModel ({dict, wordLimit, startingLetter, deletionDelay = 5000}) {
 
     if(!startingLetter) startingLetter = randomStartingLetterTR()
 
@@ -13,8 +13,9 @@ async function wordChainModel ({dict, wordLimit, startingLetter}) {
         dict: dict,
         wordLimit: wordLimit,
         remainingWordLimit: wordLimit,
-        startingLetter: startingLetter,
+        startingLetter,
         lastAnswerer: null,
+        deletionDelay,
         usedWords: []
     }
 }
@@ -23,16 +24,23 @@ const victoryTypes = {
     classic: {score: 100}
 }
 
-const wordLimitRange = {
-    min: 10,
-    max: 1000
+const requirements = {
+    wordLimitRange : {
+        min: 10,
+        max: 1000
+    },
+    deletionDelay: {
+        min: 0,
+        max: 30
+    }
 }
 
-async function createWordChainGame({ channelId, dict, wordLimit, startingLetter}){
+
+async function createWordChainGame({ channelId, dict, wordLimit, startingLetter, deletionDelay}){
 
     const mongoClient = await getMongoClient();
 
-    const game = await wordChainModel({ dict, wordLimit, startingLetter})
+    const game = await wordChainModel({ dict, wordLimit, startingLetter, deletionDelay})
 
     const update = {isActive: true, activeGame: game.name, game }
 
@@ -80,7 +88,8 @@ async function getWordChainGame(channelID, word){
                             remainingWordLimit: 1,
                             wordLimit: 1,
                             startingLetter: 1,
-                            lastAnswerer:1
+                            lastAnswerer: 1,
+                            deletionDelay: 1
                             }
                         }
 
@@ -187,4 +196,4 @@ async function updatePlayerStat(guildId, { userId, userTag, points, word, victor
     }
 }
 
-module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat, victoryTypes, wordLimitRange }
+module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat, victoryTypes, requirements }

@@ -26,6 +26,7 @@
 // node 16.10.0
 // mongoDB 5.0.3
 
+require('dotenv').config();
 const {Client, Collection, Intents} = require('discord.js') ;
 const fs = require('fs')
 const getCommands = require('./Commands/Util/getCommands.js').getCommands;

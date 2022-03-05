@@ -206,7 +206,7 @@ async function getScoreboard(guildID, interaction) {
         const agg = [
             {
                 '$match': {
-                    '_id': '895274321927360514'
+                    '_id': guildID
                 }
             }, {
                 '$project': {

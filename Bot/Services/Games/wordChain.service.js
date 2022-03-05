@@ -233,7 +233,7 @@ async function getScoreboard(guildID, interaction) {
         }
 
         const playerTrio = {} //if player is not in top 10, return player and his closest rivals.
-        for (let i = 0; i<10; i++){
+        for (let i = 0; i<scoresDocs.length; i++){
             players_promise.push(interaction.client.users.fetch(scoresDocs[i].scores.k))
             scores.push(scoresDocs[i].scores.v)
         }

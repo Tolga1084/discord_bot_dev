@@ -57,13 +57,13 @@ function getKeyByValue(object, value) {
          if (deletionDelay === 30000) return
 
          if (deleteMessage) {
-             if (!message.isCommand()) setTimeout(() => message.delete(), deletionDelay)
+             if (!message.isInteraction) setTimeout(() => message.delete(), deletionDelay)
              else throw "interaction cannot be deleted!"
          }
 
          if (botReply) {
              setTimeout(() => botReply.delete(), deletionDelay)
-         } else if (message.isCommand())
+         } else if (message.isInteraction)
              setTimeout(() => message.deleteReply(), deletionDelay)
      } catch (err) {
          console.log("replyThenDelete " + err + "\ndeletionDelay: " + deletionDelay)

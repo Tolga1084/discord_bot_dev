@@ -4,6 +4,7 @@ const deployCommands = require("../Commands/Util/deployCommands.js")
 const clientID = process.env['clientID']
 const getMongoClient = require("../_helpers/getMongoClient.js")
 const util = require('util')
+const {deleteChannels} = require("./channel.service");
 
 // languages: "EN","TR"
 // reactivation is when a guild that had the bot, invites it back
@@ -91,9 +92,7 @@ async function removeGuild(guild){
             {$set: update}
         )
 
-        const result = await mongoClient.db(db).collection("channels").deleteMany(
-            {guildID: guild.id}
-        )
+        const result = await deleteChannels(guild.id)
 
         console.log("The guild has been removed ! " + guild.name + " /ID: " + guild.id, result)
         console.log("Number of channels deleted: " + result.deletedCount + " // " + guild.name + " /ID: " + guild.id, result)
@@ -218,8 +217,9 @@ async function syncGuilds(client){
         let commandDeployCount = 0;
         let commandRefreshCount = 0;
 
+        let log = true
         for (const guild of unregisteredGuilds) {
-            if(await deployCommands(clientID, guild._id, "EN",false))
+            if(await deployCommands(clientID, guild._id, "EN", false,3))
                 commandDeployCount++
             else console.log("\nFailed to deploy commands! => Guild ID: " + guild._id + ", Name: " + guild.name)
         }
@@ -228,7 +228,7 @@ async function syncGuilds(client){
 
         for (const guild of guildArrDiff(guildArray.filter(g => g.hasBot === true),removedGuilds)) {
             try {
-                if(await deployCommands(clientID, guild._id, guild.interfaceLanguage, false))
+                if(await deployCommands(clientID, guild._id, guild.interfaceLanguage, false, 3))
                     commandRefreshCount++
             }
             catch(error){

@@ -196,4 +196,76 @@ async function updatePlayerStat(guildId, { userId, userTag, points, word, victor
     }
 }
 
-module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat, victoryTypes, requirements }
+async function getScoreboard(guildID, interaction) {
+
+    const mongoClient = await getMongoClient();
+    try {
+        const players_promise = []
+        const scores = []
+
+        const agg = [
+            {
+                '$match': {
+                    '_id': '895274321927360514'
+                }
+            }, {
+                '$project': {
+                    'scores': {
+                        '$objectToArray': '$games.wordChain.scoreBoard'
+                    },
+                    '_id': 0
+                }
+            }, {
+                '$unwind': {
+                    'path': '$scores',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$sort': {
+                    'scores.v': -1
+                }
+            }
+        ];
+
+        const scoresDocs = await mongoClient.db(db).collection("guilds").aggregate(agg).toArray()
+        if (scoresDocs.length === 0){
+            return {noPlayers: true}
+        }
+
+        const playerTrio = {} //if player is not in top 10, return player and his closest rivals.
+        for (let i = 0; i<10; i++){
+            players_promise.push(interaction.client.users.fetch(scoresDocs[i].scores.k))
+            scores.push(scoresDocs[i].scores.v)
+        }
+        const playerIndex = scoresDocs.findIndex(item => item.scores.k === interaction.member.id)
+
+        if (playerIndex > 9) {
+
+            playerTrio.player = await interaction.client.users.fetch(scoresDocs[playerIndex].scores.k)
+            playerTrio.playerNext = await interaction.client.users.fetch(scoresDocs[playerIndex - 1].scores.k)
+
+            playerTrio.player["score"] = scoresDocs[playerIndex].scores.v
+            playerTrio.playerNext["score"] = scoresDocs[playerIndex - 1].scores.v
+
+            playerTrio.player["rank"] = playerIndex + 1
+            playerTrio.playerNext["rank"] = playerIndex
+
+            if(playerIndex !== scoresDocs.length - 1) {
+                playerTrio.playerPrev = await interaction.client.users.fetch(scoresDocs[playerIndex + 1].scores.k)
+                playerTrio.playerPrev["rank"] = playerIndex + 2
+                playerTrio.playerPrev["score"] = scoresDocs[playerIndex + 1].scores.v
+            }
+        }
+
+        const players = await Promise.all(players_promise)
+
+        return {players, scores, playerTrio}
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR updatePlayerStat: ${error}`); // special case for some reason
+        }
+        throw error
+    }
+}
+
+module.exports = { createWordChainGame, getWordChainGame, updateWordChainGame, updatePlayerStat, getScoreboard, victoryTypes, requirements }

@@ -5,13 +5,14 @@ const getMongoClient = require("../_helpers/getMongoClient.js")
 //TODO name change events; guild and channel --- channel name sync?
 //TODO date fields
 
-async function channelModel (channel, isActive= false, activeGame = null) {
+async function channelModel (channel, isActive= false, activeGame = null, isDeleted = false) {
 
     return {
         _id: channel.id,
         guildID: channel.guildId,
         name: channel.name,
         isActive,
+        isDeleted,
         activeGame,
         game: {}
     }
@@ -98,4 +99,24 @@ async function deactivateChannel( channelId ){
     }
 }
 
-module.exports = { createChannel, getChannel, getActiveChannels, gameEnum, deactivateChannel }
+async function deleteChannels(guildId) {
+    const mongoClient = await getMongoClient();
+
+    const update = {isDeleted: true, activeGame: null}
+
+    try {
+        const result = await mongoClient.db(db).collection("channels").deleteMany(
+            {guildID: guildId},
+            {$set: update })
+
+        return result;
+
+    }catch (error) {
+        if (error instanceof MongoServerError) {
+            console.log(`ERROR stopWordChainGame: ${error}`); // special case for some reason
+        }
+        throw error
+    }
+}
+
+module.exports = { createChannel, getChannel, getActiveChannels, gameEnum, deactivateChannel, deleteChannels }

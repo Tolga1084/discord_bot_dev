@@ -4,3 +4,6 @@
 /node16.10.bat
 /mongod.exe - Shortcut.lnk
 /MongoDBCompass.lnk
+/run.cmd
+/Bot/run.cmd
+/Bot/.env

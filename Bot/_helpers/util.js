@@ -18,53 +18,6 @@
     return /^-?\d+$/.test(val);
 }
 
- async function playerWon(playerID,rewardPoints,message) {
-
-    console.log("oyun bitti!");
-    await message.reply({
-        content: 'Oyunu bitirdin!' // ADD END OF GAME GIF (TERMINATOR ?!!!)
-    })
-    await message.channel.send(`${CS_dance}
-        `);
-    await message.channel.send(`-------\n\n-------`)
-
-    return playersDB.updateOne(
-        {_id : playerID},
-        {
-            "$inc":
-                {
-                    'victoryCount' : 1,
-                    'score' : rewardPoints
-                }
-        }
-    )
-}
-// TODO keep word statistics
- async function updateWordStat(wordID,playerTag){
-    let t0 = await performance.now();
-    let result = await dictionaryDB.updateOne(
-        {_id : wordID},
-        {
-            "$inc":
-                {['playersStat.'+playerTag] : 1 ,
-                    'isUsed' : 1,
-                    'usedStat' : 1
-                }
-        }
-    )
-    let t1 = await performance.now();
-    console.log('uws is completed in ' + (t1-t0));
-    return result;
-}
-
-/* async function getScoreboard(playerID,channel) {
- await scoreBoard = playerDB.find({})
-      .sort({ "score": "desc" })
-      .limit(10);
-
- channel.send()
-}*/
-
  function randomStartingLetterTR () {
     let turkceKarakterler = 'ABCÇDEFGHIİJKLMNOÖPRSŞTUÜVYZ' // Ğ is excluded
     return turkceKarakterler[(Math.floor(Math.random() * turkceKarakterler.length))];
@@ -90,9 +43,15 @@ function getKeyByValue(object, value) {
      try {
          let botReply = false
          if (deletionDelay !== 0) {
-             botReply = await message.reply({
-                 content: reply
-             })
+             if (message.deferred){
+                 botReply = await message.followUp({
+                     content: reply
+                 })
+             }else {
+                 botReply = await message.reply({
+                     content: reply
+                 })
+             }
          }
 
          if (deletionDelay === 30000) return

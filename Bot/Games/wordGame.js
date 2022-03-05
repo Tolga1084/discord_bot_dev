@@ -133,7 +133,7 @@ async function wordGame (message, language){
     let points = dictWord.length
     if (dictWord.length > 7 ) {message.react(emojis.cemismont); points += 5}
     if (dictWord.length > 11) {message.react(emojis.ebu_leheb); points += 8}
-    if (dictWord.length > 14) {message.react(emojis.terminator); points += 15}
+    if (dictWord.length > 15) {message.react(emojis.terminator); points += 15}
 
     console.log("\nwordQuery madde " + dictWord + "\nwordQuery ID " + wordQuery._id)
 

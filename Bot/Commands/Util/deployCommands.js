@@ -4,6 +4,9 @@ const commandsJsonData = require("./getCommands").getCommandsJsonData
 
 async function deployCommands (clientID, guildID, language, log, loopCount) {
 
+    if (log)
+        JSON.stringify(commandsJsonData)
+
     const commands = commandsJsonData(language);
     try {
         if (log)

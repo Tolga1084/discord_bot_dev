@@ -1,5 +1,5 @@
 const fs = require('fs');
-const commandsPath = "E:/discord_bot_dev/Bot/Commands";
+const commandsPath = "E:/gamerBot-dev/Bot/Commands";
 
 
 function getCommands() {

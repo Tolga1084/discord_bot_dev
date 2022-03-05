@@ -24,7 +24,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
             subCommand_min_word_limit: "min_kelime_limiti",
             subCommand_deletion_delay: "silme_süresi",
             content_1A: `		 ***DİKKAT***		` + "\nBu kanalda zaten oyun oynanıyor!",
-            content_1B: "Yeni bir oyun başlatırsan, bu oyunu sonlandırmış olacaksın! Devam etmek istiyorsan **'BAŞLAT'** tuşuna bas" + `${emojis.altar}`,
+            content_1B: "Yeni bir oyun başlatırsan, bu oyunu sonlandırmış olacaksın! Devam etmek istiyorsan **'BAŞLAT'** tuşuna bas. " + `${emojis.altar}`,
             wordChain: "Kelime Zinciri",
             button_start: "BAŞLAT"
         },
@@ -34,7 +34,7 @@ async function startWordChainGame (interaction, buttonDuration, language){
             subCommand_min_word_limit: "min_word_limit",
             subCommand_deletion_delay: "deletion_delay",
             content_1A: `		 ***WARNING***		` + "\nThere is already an active game on this channel!",
-            content_1B: "\nStarting a new game will terminate it. Press the **'START'** button, if you wish to proceed." + `${emojis.altar}`,
+            content_1B: "\nStarting a new game will terminate it. Press the **'START'** button, if you wish to proceed. " + `${emojis.altar}`,
             wordChain: "Word Chain",
             button_start: "START"
         }

@@ -1,8 +1,7 @@
 const getEmojis  = require("../../_helpers/getEmojis");
 const {getScoreboard} = require("../../Services/Games/wordChain.service");
 const {replyThenDelete} = require("../../_helpers/util");
-
-
+const { Formatters } = require('discord.js');
 
 async function scoreBoard (interaction, language, game) {
 
@@ -87,7 +86,7 @@ async function scoreBoard (interaction, language, game) {
             }
         }
 
-        if(playerTrio.player === undefined) interaction.followUp(L.noRecord)
+        if(!isAuthorIncluded && playerTrio.player === undefined) interaction.followUp(L.noRecord)
 
         interaction.followUp({
             embeds: [embed]

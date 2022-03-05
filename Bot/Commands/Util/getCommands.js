@@ -1,6 +1,5 @@
 const fs = require('fs');
-const commandsPath = "E:/gamerBot-dev/Bot/Commands";
-
+const commandsPath = process.env['commandsPath']
 
 function getCommands() {
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));

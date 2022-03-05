@@ -52,7 +52,7 @@ async function scoreBoard (interaction, language, game) {
     embed.title = game.toLocaleUpperCase(language)
 
     try {
-        const { players, scores, playerTrio, noPlayers } = await getScoreboard("895274321927360514", interaction)
+        const { players, scores, playerTrio, noPlayers } = await getScoreboard(interaction.guildId, interaction)
 
         if(noPlayers){
             replyThenDelete(interaction,L.noPlayers)

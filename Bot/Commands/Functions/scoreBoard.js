@@ -10,7 +10,7 @@ async function scoreBoard (interaction, language, game) {
     const emojis = await getEmojis(interaction.client)
     const languages = {
         TR: {
-            player: "Oyuncu",
+            scoreBoard: "Skor Tablosu",
             score: "Skor",
             noRecord: "Hiç puanın yok! " + `${emojis.altar}`,
             noPlayers: "Daha puan alabilen olmamış! " +`${emojis.ever}`,
@@ -18,7 +18,7 @@ async function scoreBoard (interaction, language, game) {
 
         },
         EN: {
-            player: "Player",
+            scoreBoard: "Skor Tablosu",
             score: "Score",
             noRecord: "You have no score! " + `${emojis.altar}`,
             noPlayers: "Nobody has scored yet! " +`${emojis.ever}`,
@@ -32,20 +32,14 @@ async function scoreBoard (interaction, language, game) {
 
     const embed = {
         "title": "title",
-            "color": 12745742,
+            "color": 5763719,
             "thumbnail": {
             "url": guildIcon
         },
         "fields": [
             {
-                "name": L.player,
-                "value": "\n\n\n",
-                "inline": true
-            },
-            {
-                "name": L.score,
-                "value": "\n\n\n",
-                "inline": true
+                "name": L.scoreBoard,
+                "value": "",
             }
         ]
     }
@@ -63,26 +57,25 @@ async function scoreBoard (interaction, language, game) {
         embed.fields[0].value +=  players.map((player,index) => {
             if (player.id === interaction.member.id){
                 isAuthorIncluded = true
-                return ("\n" + "***" + (index + 1) + ". " + Formatters.userMention(player.id) + "***")
+                return ( "***" + (index + 1) + ". " + Formatters.userMention(player.id) + "***\n" + `${emojis.redArrow} ` + Formatters.bold(scores[index]))
             }
-            return ("\n" + (index + 1) + ". " + Formatters.userMention(player.id))
-        }).join("\n")
-        embed.fields[1].value  += scores.join("\n\n")
+            return ((index + 1) + ". " + Formatters.userMention(player.id) + "\n" + `${emojis.greenArrow} ` + Formatters.bold(scores[index]))
+        }).join("\n\n")
 
         if (!isAuthorIncluded && playerTrio.player){ //player may not exist since the interaction author may not have been registered.
-            embed.fields[0].value += "\n\n..."
-            embed.fields[1].value += "\n\n..."
+            embed.fields[0].value += "\n..."
+
             if ((playerTrio.player.rank !== 11)){
                 embed.fields[0].value += "\n\n" + playerTrio.playerNext.rank+ ". " + Formatters.userMention(playerTrio.playerNext.id)
-                embed.fields[1].value += "\n\n" + playerTrio.playerNext.score
+                embed.fields[0].value += "\n" + `${emojis.greenArrow} ` + playerTrio.playerNext.score
             }
 
             embed.fields[0].value += "\n\n" + "***" + playerTrio.player.rank+ ". " + Formatters.userMention(playerTrio.player.id) + "***"
-            embed.fields[1].value += "\n\n" + playerTrio.player.score
+            embed.fields[0].value += "\n" + `${emojis.redArrow} ` + playerTrio.player.score
 
             if(playerTrio.playerPrev) {
                 embed.fields[0].value += "\n\n" + playerTrio.playerPrev.rank + ". " + Formatters.userMention(playerTrio.playerPrev.id)
-                embed.fields[1].value += "\n\n" + playerTrio.playerPrev.score
+                embed.fields[0].value += "\n" + `${emojis.greenArrow} ` + playerTrio.playerPrev.score
             }
         }
 

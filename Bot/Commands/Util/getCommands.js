@@ -1,5 +1,6 @@
 const fs = require('fs');
-const commandsPath = process.env['commandsPath']
+const path = require("path");
+const commandsPath = path.resolve(__dirname, "../");
 
 function getCommands() {
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));

@@ -20,6 +20,8 @@ async function getEmojis(client) {
     defaultEmojis.CS_dance =   await getEmoji("CS_dance", guild)
     defaultEmojis.terminator =   await getEmoji("terminator", guild)
     defaultEmojis.HC_Fine = await getEmoji("HC_Fine", guild)
+    defaultEmojis.greenArrow = await getEmoji("greenarrow", guild)
+    defaultEmojis.redArrow = await getEmoji("redarrow", guild)
 
     return defaultEmojis;
 }
